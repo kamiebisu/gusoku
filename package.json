@@ -25,6 +25,7 @@
     "ethers": "^5.0.0",
     "hardhat": "^2.0.2",
     "hardhat-deploy": "^0.7.0-beta.28",
+    "hardhat-deploy-ethers": "^0.3.0-beta.5",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.59",
     "ts-node": "^9.0.0",
