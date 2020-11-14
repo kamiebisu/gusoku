@@ -10,5 +10,5 @@ interface IOptionsAdapter {
     function getPutOptions() external view returns (address[] memory);
 
     ///@notice Query and return available CALL options
-    // function getCallOptions() external view returns (address);
+    function getCallOptions() external view returns (address[] memory);
 }

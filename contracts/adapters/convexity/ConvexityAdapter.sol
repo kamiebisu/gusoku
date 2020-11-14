@@ -19,38 +19,55 @@ contract ConvexityAdapter is IOptionsAdapter {
         );
     }
 
-    function getPutOptions() external view override returns (address[] memory) {
+    function getFilteredOptions(string memory _filter)
+        internal
+        view
+        returns (address[] memory)
+    {
         uint256 numOptionsContracts = optionsFactory
             .getNumberOfOptionsContracts();
 
         // Options created by the OptionsFactory
-        address[] memory createdPutOptions = new address[](numOptionsContracts);
+        address[] memory createdOptions = new address[](numOptionsContracts);
 
         IoToken oToken;
         uint256 optionIndex = 0;
         for (uint256 i = 0; i < numOptionsContracts; i++) {
             address oTokenAddress = optionsFactory.optionsContracts(i);
             oToken = IoToken(oTokenAddress);
-            // Only add PUT options that have not expired yet
+            // Only add options that have not expired yet
             if (
                 // Use the strings library functions: toSlice(), contains()
-                (oToken.name().toSlice().contains("Put".toSlice()) ||
-                    oToken.symbol().toSlice().contains("Put".toSlice())) &&
+                (oToken.name().toSlice().contains(_filter.toSlice()) ||
+                    oToken.symbol().toSlice().contains(_filter.toSlice())) &&
                 !oToken.hasExpired() &&
                 oToken.expiry() > block.timestamp
             ) {
-                createdPutOptions[optionIndex] = oTokenAddress;
+                createdOptions[optionIndex] = oTokenAddress;
                 optionIndex = optionIndex.add(1);
             }
         }
 
         // Trim array removing zero addresses, just for simplicity when it's consumed.
         // No gas is saved anyways.
-        address[] memory nonExpiredPutOptions = new address[](optionIndex);
+        address[] memory nonExpiredOptions = new address[](optionIndex);
         for (uint256 i = 0; i < optionIndex; i++) {
-            nonExpiredPutOptions[i] = createdPutOptions[i];
+            nonExpiredOptions[i] = createdOptions[i];
         }
 
-        return nonExpiredPutOptions;
+        return nonExpiredOptions;
+    }
+
+    function getPutOptions() external view override returns (address[] memory) {
+        return getFilteredOptions("Put");
+    }
+
+    function getCallOptions()
+        external
+        view
+        override
+        returns (address[] memory)
+    {
+        return getFilteredOptions("Call");
     }
 }

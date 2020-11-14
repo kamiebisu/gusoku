@@ -16,4 +16,8 @@ contract OptionsWarchest {
     function getConvexityPutOptions() public view returns (address[] memory) {
         return convexity.getPutOptions();
     }
+
+    function getConvexityCallOptions() public view returns (address[] memory) {
+        return convexity.getCallOptions();
+    }
 }

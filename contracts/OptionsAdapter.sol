@@ -16,4 +16,16 @@ library OptionsAdapter {
         require(success, "OptionsAdapter: getPutOptions staticcall failed");
         return abi.decode(result, (address[]));
     }
+
+    function getCallOptions(Options options)
+        external
+        view
+        returns (address[] memory)
+    {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature("getCallOptions()")
+        );
+        require(success, "OptionsAdapter: getCallOptions staticcall failed");
+        return abi.decode(result, (address[]));
+    }
 }

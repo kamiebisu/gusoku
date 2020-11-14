@@ -2,11 +2,7 @@ import {artifacts, deployments, ethers} from "hardhat";
 
 describe("OptionsWarchest", () => {
   beforeEach(async () => {
-    await deployments.fixture([
-      "ConvexityAdapter",
-      "OptionsAdapter",
-      "OptionsWarchest",
-    ]);
+    await deployments.fixture();
   });
   it("ConvexityAdapter should return available options", async () => {
     const OptionsWarchest = await deployments.get("OptionsWarchest");
@@ -19,7 +15,10 @@ describe("OptionsWarchest", () => {
       ethers.provider
     );
 
-    const availableOptions = await optionsWarchest.getConvexityPutOptions();
-    console.log(availableOptions);
+    const availablePutOptions = await optionsWarchest.getConvexityPutOptions();
+    console.log("Put options:\n" + availablePutOptions);
+
+    const availableCallOptions = await optionsWarchest.getConvexityCallOptions();
+    console.log("Call options:\n" + availableCallOptions);
   });
 });
