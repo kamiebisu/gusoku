@@ -7,8 +7,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const {deployer} = await getNamedAccounts();
 
+  const strings = await deployments.get("strings");
+
   await deploy("ConvexityAdapter", {
     from: deployer,
+    libraries: {
+      strings: strings.address,
+    },
     log: true,
     deterministicDeployment: true,
   });
@@ -16,3 +21,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ["ConvexityAdapter"];
+func.dependencies = ["strings"];

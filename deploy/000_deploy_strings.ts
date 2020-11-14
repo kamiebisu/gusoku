@@ -7,7 +7,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const {deployer} = await getNamedAccounts();
 
-  await deploy("OptionsAdapter", {
+  await deploy("strings", {
     from: deployer,
     log: true,
     deterministicDeployment: true,
@@ -15,4 +15,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["OptionsAdapter"];
+func.tags = ["strings"];

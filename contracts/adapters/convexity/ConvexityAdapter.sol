@@ -5,9 +5,11 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IOptionsAdapter.sol";
 import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IoToken.sol";
+import "../../libraries/strings.sol";
 
 contract ConvexityAdapter is IOptionsAdapter {
     using SafeMath for uint256;
+    using strings for *;
 
     IOptionsFactory immutable optionsFactory;
 
@@ -29,8 +31,14 @@ contract ConvexityAdapter is IOptionsAdapter {
         for (uint256 i = 0; i < numOptionsContracts; i++) {
             address oTokenAddress = optionsFactory.optionsContracts(i);
             oToken = IoToken(oTokenAddress);
-            // Only add options that have not expired yet
-            if (!oToken.hasExpired() && oToken.expiry() > block.timestamp) {
+            // Only add PUT options that have not expired yet
+            if (
+                // Use the strings library functions: toSlice(), contains()
+                (oToken.name().toSlice().contains("Put".toSlice()) ||
+                    oToken.symbol().toSlice().contains("Put".toSlice())) &&
+                !oToken.hasExpired() &&
+                oToken.expiry() > block.timestamp
+            ) {
                 createdPutOptions[optionIndex] = oTokenAddress;
                 optionIndex = optionIndex.add(1);
             }
