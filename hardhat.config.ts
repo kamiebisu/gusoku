@@ -1,6 +1,7 @@
 import "@nomiclabs/hardhat-waffle";
 import * as dotenv from "dotenv";
 import "hardhat-deploy";
+import "hardhat-deploy-ethers";
 import {HardhatUserConfig, task} from "hardhat/config";
 
 dotenv.config();
@@ -23,6 +24,10 @@ const accounts = {
 
 const config: HardhatUserConfig = {
   solidity: "0.7.4",
+
+  mocha: {
+    timeout: 1000000,
+  },
 
   namedAccounts: {
     deployer: 0,
