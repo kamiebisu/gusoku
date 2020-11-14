@@ -21,18 +21,28 @@ contract ConvexityAdapter is IOptionsAdapter {
         uint256 numOptionsContracts = optionsFactory
             .getNumberOfOptionsContracts();
 
+        // Options created by the OptionsFactory
+        address[] memory createdPutOptions = new address[](numOptionsContracts);
+
         IoToken oToken;
-        address[] memory availablePutOptions;
         uint256 optionIndex = 0;
         for (uint256 i = 0; i < numOptionsContracts; i++) {
             address oTokenAddress = optionsFactory.optionsContracts(i);
             oToken = IoToken(oTokenAddress);
+            // Only add options that have not expired yet
             if (!oToken.hasExpired() && oToken.expiry() > block.timestamp) {
-                availablePutOptions[optionIndex] = oTokenAddress;
-                optionIndex.add(1);
+                createdPutOptions[optionIndex] = oTokenAddress;
+                optionIndex = optionIndex.add(1);
             }
         }
 
-        return availablePutOptions;
+        // Trim array removing zero addresses, just for simplicity when it's consumed.
+        // No gas is saved anyways.
+        address[] memory nonExpiredPutOptions = new address[](optionIndex);
+        for (uint256 i = 0; i < optionIndex; i++) {
+            nonExpiredPutOptions[i] = createdPutOptions[i];
+        }
+
+        return nonExpiredPutOptions;
     }
 }
