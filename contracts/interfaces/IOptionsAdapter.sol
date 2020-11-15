@@ -21,9 +21,16 @@ interface IOptionsAdapter {
 
     ///@notice Buy a given PUT or CALL option
     ///@dev The function is payable because it needs to be able to receive ETH as a paymentToken
-    function buyOption(
+    function buyOptions(
         address optionAddress,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable;
+
+    ///@notice Sell a given PUT or CALL option
+    function sellOptions(
+        address optionAddress,
+        address payoutTokenAddress,
+        uint256 amountToSell
+    ) external;
 }

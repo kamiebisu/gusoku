@@ -89,7 +89,7 @@ contract ConvexityAdapter is IOptionsAdapter {
             );
     }
 
-    function buyOption(
+    function buyOptions(
         address optionAddress,
         address paymentTokenAddress,
         uint256 amountToBuy
@@ -99,6 +99,19 @@ contract ConvexityAdapter is IOptionsAdapter {
             optionAddress,
             paymentTokenAddress,
             amountToBuy
+        );
+    }
+
+    function sellOptions(
+        address optionAddress,
+        address payoutTokenAddress,
+        uint256 amountToSell
+    ) external override {
+        optionsExchange.sellOTokens(
+            msg.sender,
+            optionAddress,
+            payoutTokenAddress,
+            amountToSell
         );
     }
 }

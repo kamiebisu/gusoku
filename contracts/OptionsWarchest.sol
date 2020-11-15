@@ -48,7 +48,7 @@ contract OptionsWarchest {
             );
     }
 
-    function buyOption(
+    function buyOptions(
         Options optionsProtocol,
         address optionAddress,
         address paymentTokenAddress,
@@ -73,10 +73,30 @@ contract OptionsWarchest {
             );
         }
 
-        optionsProtocol.buyOption(
+        optionsProtocol.buyOptions(
             optionAddress,
             paymentTokenAddress,
             amountToBuy
+        );
+    }
+
+    function sellOptions(
+        Options optionsProtocol,
+        address optionAddress,
+        address payoutTokenAddress,
+        uint256 amountToSell
+    ) public {
+        // Ensure that the OptionsWarchest holds enough options to sell
+        IERC20 optionToken = IERC20(optionAddress);
+        require(
+            optionToken.balanceOf(address(this)) >= amountToSell,
+            "OptionsWarchest: there's not enough options to sell"
+        );
+
+        optionsProtocol.sellOptions(
+            optionAddress,
+            payoutTokenAddress,
+            amountToSell
         );
     }
 }
