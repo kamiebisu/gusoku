@@ -46,4 +46,21 @@ library OptionsAdapter {
         require(success, "OptionsAdapter: getPrice staticcall failed");
         return abi.decode(result, (uint256));
     }
+
+    function buyOption(
+        Options options,
+        address optionAddress,
+        address paymentTokenAddress,
+        uint256 amountToBuy
+    ) external {
+        (bool success, ) = address(options).delegatecall(
+            abi.encodeWithSignature(
+                "buyOption(address,address,uint256",
+                optionAddress,
+                paymentTokenAddress,
+                amountToBuy
+            )
+        );
+        require(success, "OptionsAdapter: buyOption delegatecall failed");
+    }
 }
