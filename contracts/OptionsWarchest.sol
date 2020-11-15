@@ -20,4 +20,13 @@ contract OptionsWarchest {
     function getConvexityCallOptions() public view returns (address[] memory) {
         return convexity.getCallOptions();
     }
+
+    function getConvexityOptionPrice(
+        address optionAddress,
+        address paymentTokenAddress,
+        uint256 amountToBuy
+    ) public view returns (uint256) {
+        return
+            convexity.getPrice(optionAddress, paymentTokenAddress, amountToBuy);
+    }
 }

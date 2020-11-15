@@ -4,6 +4,7 @@ pragma solidity ^0.7.0;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/IOptionsAdapter.sol";
 import "./interfaces/IOptionsFactory.sol";
+import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "../../libraries/strings.sol";
 
@@ -12,10 +13,14 @@ contract ConvexityAdapter is IOptionsAdapter {
     using strings for *;
 
     IOptionsFactory immutable optionsFactory;
+    IOptionsExchange immutable optionsExchange;
 
     constructor() {
         optionsFactory = IOptionsFactory(
             0xcC5d905b9c2c8C9329Eb4e25dc086369D6C7777C
+        );
+        optionsExchange = IOptionsExchange(
+            0x39246c4F3F6592C974EBC44F80bA6dC69b817c71
         );
     }
 
@@ -69,5 +74,18 @@ contract ConvexityAdapter is IOptionsAdapter {
         returns (address[] memory)
     {
         return getFilteredOptions("Call");
+    }
+
+    function getPrice(
+        address optionAddress,
+        address paymentTokenAddress,
+        uint256 amountToBuy
+    ) external view override returns (uint256) {
+        return
+            optionsExchange.premiumToPay(
+                optionAddress,
+                paymentTokenAddress,
+                amountToBuy
+            );
     }
 }

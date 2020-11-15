@@ -11,4 +11,11 @@ interface IOptionsAdapter {
 
     ///@notice Query and return available CALL options
     function getCallOptions() external view returns (address[] memory);
+
+    ///@notice Query and return price for a given PUT or CALL option
+    function getPrice(
+        address optionAddress,
+        address paymentTokenAddress,
+        uint256 amountToBuy
+    ) external view returns (uint256);
 }

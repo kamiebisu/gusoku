@@ -1,4 +1,7 @@
+import {waffleChai} from "@ethereum-waffle/chai";
+import chai, {expect} from "chai";
 import {artifacts, deployments, ethers} from "hardhat";
+chai.use(waffleChai);
 
 describe("OptionsWarchest", () => {
   beforeEach(async () => {
@@ -16,9 +19,27 @@ describe("OptionsWarchest", () => {
     );
 
     const availablePutOptions = await optionsWarchest.getConvexityPutOptions();
-    console.log("Put options:\n" + availablePutOptions);
 
     const availableCallOptions = await optionsWarchest.getConvexityCallOptions();
-    console.log("Call options:\n" + availableCallOptions);
+
+    if (availablePutOptions.length > 0) {
+      expect(
+        await optionsWarchest.getConvexityOptionPrice(
+          availablePutOptions[0],
+          ethers.constants.AddressZero,
+          ethers.BigNumber.from("2")
+        )
+      ).to.gt(0);
+    }
+
+    if (availableCallOptions.length > 0) {
+      expect(
+        await optionsWarchest.getConvexityOptionPrice(
+          availableCallOptions[0],
+          ethers.constants.AddressZero,
+          ethers.BigNumber.from(2)
+        )
+      ).to.gt(0);
+    }
   });
 });

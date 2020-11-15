@@ -28,4 +28,22 @@ library OptionsAdapter {
         require(success, "OptionsAdapter: getCallOptions staticcall failed");
         return abi.decode(result, (address[]));
     }
+
+    function getPrice(
+        Options options,
+        address optionAddress,
+        address paymentTokenAddress,
+        uint256 amountToBuy
+    ) external view returns (uint256) {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature(
+                "getPrice(address,address,uint256)",
+                optionAddress,
+                paymentTokenAddress,
+                amountToBuy
+            )
+        );
+        require(success, "OptionsAdapter: getPrice staticcall failed");
+        return abi.decode(result, (uint256));
+    }
 }
