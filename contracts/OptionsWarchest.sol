@@ -8,36 +8,54 @@ import "./OptionsAdapter.sol";
 contract OptionsWarchest {
     using OptionsAdapter for Options;
 
-    Options convexity;
+    enum ProtocolNames {Convexity}
+
+    Options[1] public optionsProtocols;
 
     constructor(address _convexity) {
-        convexity = Options(_convexity);
+        optionsProtocols[uint256(ProtocolNames.Convexity)] = Options(
+            _convexity
+        );
     }
 
-    function getConvexityPutOptions() public view returns (address[] memory) {
-        return convexity.getPutOptions();
+    function getPutOptions(Options optionsProtocol)
+        public
+        view
+        returns (address[] memory)
+    {
+        return optionsProtocol.getPutOptions();
     }
 
-    function getConvexityCallOptions() public view returns (address[] memory) {
-        return convexity.getCallOptions();
+    function getCallOptions(Options optionsProtocol)
+        public
+        view
+        returns (address[] memory)
+    {
+        return optionsProtocol.getCallOptions();
     }
 
-    function getConvexityOptionPrice(
+    function getOptionPrice(
+        Options optionsProtocol,
         address optionAddress,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) public view returns (uint256) {
         return
-            convexity.getPrice(optionAddress, paymentTokenAddress, amountToBuy);
+            optionsProtocol.getPrice(
+                optionAddress,
+                paymentTokenAddress,
+                amountToBuy
+            );
     }
 
-    function convexityBuyOption(
+    function buyOption(
+        Options optionsProtocol,
         address optionAddress,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) public payable {
         // Ensure that the msg.sender has sufficient paymentTokens before buying the options
-        uint256 premiumToPay = convexity.getPrice(
+        uint256 premiumToPay = optionsProtocol.getPrice(
             optionAddress,
             paymentTokenAddress,
             amountToBuy
@@ -55,6 +73,10 @@ contract OptionsWarchest {
             );
         }
 
-        convexity.buyOption(optionAddress, paymentTokenAddress, amountToBuy);
+        optionsProtocol.buyOption(
+            optionAddress,
+            paymentTokenAddress,
+            amountToBuy
+        );
     }
 }
