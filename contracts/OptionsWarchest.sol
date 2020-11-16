@@ -18,6 +18,8 @@ contract OptionsWarchest {
         );
     }
 
+    receive() external payable {}
+
     function getPutOptions(Options optionsProtocol)
         public
         view
