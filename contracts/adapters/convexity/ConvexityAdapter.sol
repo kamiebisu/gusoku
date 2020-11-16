@@ -154,13 +154,12 @@ contract ConvexityAdapter is IOptionsAdapter {
         IERC20 underlyingToken = IERC20(underlyingAddress);
 
         // Approve the oToken contract to transfer the caller's underlyingToken balance
-        if (underlyingAddress != address(0)) {
-            if (
-                underlyingToken.allowance(address(this), optionAddress) !=
-                type(uint256).max
-            ) {
-                underlyingToken.approve(optionAddress, type(uint256).max);
-            }
+        if (
+            underlyingAddress != address(0) &&
+            underlyingToken.allowance(address(this), optionAddress) !=
+            type(uint256).max
+        ) {
+            underlyingToken.approve(optionAddress, type(uint256).max);
         }
 
         uint256 underlyingAmountRequired = optionToken
