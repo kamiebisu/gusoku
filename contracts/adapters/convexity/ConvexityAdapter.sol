@@ -96,7 +96,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         uint256 amountToBuy
     ) external payable override {
         optionsExchange.buyOTokens(
-            msg.sender,
+            address(this),
             optionAddress,
             paymentTokenAddress,
             amountToBuy
@@ -109,7 +109,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         uint256 amountToSell
     ) external override {
         optionsExchange.sellOTokens(
-            msg.sender,
+            address(this),
             optionAddress,
             payoutTokenAddress,
             amountToSell
@@ -125,7 +125,7 @@ contract ConvexityAdapter is IOptionsAdapter {
 
         // Approve the oToken contract to transfer the caller's optionToken balance
         if (
-            optionToken.allowance(msg.sender, optionAddress) !=
+            optionToken.allowance(address(this), optionAddress) !=
             type(uint256).max
         ) {
             optionToken.approve(optionAddress, type(uint256).max);
@@ -137,7 +137,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         // Approve the oToken contract to transfer the caller's underlyingToken balance
         if (underlyingAddress != address(0)) {
             if (
-                underlyingToken.allowance(msg.sender, optionAddress) !=
+                underlyingToken.allowance(address(this), optionAddress) !=
                 type(uint256).max
             ) {
                 underlyingToken.approve(optionAddress, type(uint256).max);
@@ -154,12 +154,12 @@ contract ConvexityAdapter is IOptionsAdapter {
 
         if (underlyingAddress == address(0)) {
             require(
-                msg.sender.balance >= underlyingAmountRequired,
+                address(this).balance >= underlyingAmountRequired,
                 "ConvexityAdapter: insufficient underlying (ETH) to exercise"
             );
         } else {
             require(
-                underlyingToken.balanceOf(msg.sender) >=
+                underlyingToken.balanceOf(address(this)) >=
                     underlyingAmountRequired,
                 "ConvexityAdapter: insufficient underlying to exercise"
             );
