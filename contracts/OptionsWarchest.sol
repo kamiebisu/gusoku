@@ -54,7 +54,7 @@ contract OptionsWarchest {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) public payable {
-        // Ensure that the msg.sender has sufficient paymentTokens before buying the options
+        // Ensure that the OptionsWarchest have sufficient paymentTokens before buying the options
         uint256 premiumToPay = optionsProtocol.getPrice(
             optionAddress,
             paymentTokenAddress,
@@ -62,14 +62,14 @@ contract OptionsWarchest {
         );
         if (paymentTokenAddress == address(0)) {
             require(
-                msg.sender.balance >= premiumToPay,
-                "OptionsWarchest: msg.sender doesn't have a sufficient balance to buy the options"
+                address(this).balance >= premiumToPay,
+                "OptionsWarchest: the warchest doesn't have a sufficient ETH balance to buy the options"
             );
         } else {
             IERC20 paymentToken = IERC20(paymentTokenAddress);
             require(
-                paymentToken.balanceOf(msg.sender) >= premiumToPay,
-                "OptionsWarchest: msg.sender doesn't have a sufficient balance to buy the options"
+                paymentToken.balanceOf(address(this)) >= premiumToPay,
+                "OptionsWarchest: the warchest doesn't have a sufficient paymentToken balance to buy the options"
             );
         }
 
