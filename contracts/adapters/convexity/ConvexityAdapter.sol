@@ -95,6 +95,16 @@ contract ConvexityAdapter is IOptionsAdapter {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable override {
+        // Need to approve any ERC20 before spending it
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
+        if (
+            paymentTokenAddress != address(0) &&
+            paymentToken.allowance(address(this), address(optionsExchange)) !=
+            type(uint256).max
+        ) {
+            paymentToken.approve(address(optionsExchange), type(uint256).max);
+        }
+
         optionsExchange.buyOTokens(
             address(this),
             optionAddress,
@@ -108,6 +118,15 @@ contract ConvexityAdapter is IOptionsAdapter {
         address payoutTokenAddress,
         uint256 amountToSell
     ) external override {
+        // Need to approve the oToken before spending it
+        IoToken optionToken = IoToken(optionAddress);
+        if (
+            optionToken.allowance(address(this), address(optionsExchange)) !=
+            type(uint256).max
+        ) {
+            optionToken.approve(address(optionsExchange), type(uint256).max);
+        }
+
         optionsExchange.sellOTokens(
             address(this),
             optionAddress,
