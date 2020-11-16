@@ -99,4 +99,12 @@ contract OptionsWarchest {
             amountToSell
         );
     }
+
+    function exerciseOptions(
+        Options optionsProtocol,
+        address optionAddress,
+        uint256 amountToExercise
+    ) public payable {
+        optionsProtocol.exerciseOptions(optionAddress, amountToExercise);
+    }
 }

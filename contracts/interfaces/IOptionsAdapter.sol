@@ -33,4 +33,9 @@ interface IOptionsAdapter {
         address payoutTokenAddress,
         uint256 amountToSell
     ) external;
+
+    ///@notice Exercise a given PUT or CALL option
+    function exerciseOptions(address optionAddress, uint256 amountToExercise)
+        external
+        payable;
 }

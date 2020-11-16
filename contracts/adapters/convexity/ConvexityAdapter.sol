@@ -2,6 +2,7 @@
 pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../interfaces/IOptionsAdapter.sol";
 import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IOptionsExchange.sol";
@@ -112,6 +113,61 @@ contract ConvexityAdapter is IOptionsAdapter {
             optionAddress,
             payoutTokenAddress,
             amountToSell
+        );
+    }
+
+    function exerciseOptions(address optionAddress, uint256 amountToExercise)
+        external
+        payable
+        override
+    {
+        IoToken optionToken = IoToken(optionAddress);
+
+        // Approve the oToken contract to transfer the caller's optionToken balance
+        if (
+            optionToken.allowance(msg.sender, optionAddress) !=
+            type(uint256).max
+        ) {
+            optionToken.approve(optionAddress, type(uint256).max);
+        }
+
+        address underlyingAddress = optionToken.underlying();
+        IERC20 underlyingToken = IERC20(underlyingAddress);
+
+        // Approve the oToken contract to transfer the caller's underlyingToken balance
+        if (underlyingAddress != address(0)) {
+            if (
+                underlyingToken.allowance(msg.sender, optionAddress) !=
+                type(uint256).max
+            ) {
+                underlyingToken.approve(optionAddress, type(uint256).max);
+            }
+        }
+
+        uint256 underlyingAmountRequired = optionToken
+            .underlyingRequiredToExercise(amountToExercise);
+
+        require(
+            optionToken.isExerciseWindow() == true,
+            "ConvexityAdapter: can only exercise during the exericse window"
+        );
+
+        if (underlyingAddress == address(0)) {
+            require(
+                msg.sender.balance >= underlyingAmountRequired,
+                "ConvexityAdapter: insufficient underlying (ETH) to exercise"
+            );
+        } else {
+            require(
+                underlyingToken.balanceOf(msg.sender) >=
+                    underlyingAmountRequired,
+                "ConvexityAdapter: insufficient underlying to exercise"
+            );
+        }
+
+        optionToken.exercise{value: msg.value}(
+            amountToExercise,
+            optionToken.getVaultOwners()
         );
     }
 }

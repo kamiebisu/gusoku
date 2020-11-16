@@ -55,7 +55,7 @@ library OptionsAdapter {
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "buyOptions(address,address,uint256",
+                "buyOptions(address,address,uint256)",
                 optionAddress,
                 paymentTokenAddress,
                 amountToBuy
@@ -72,12 +72,27 @@ library OptionsAdapter {
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "sellOptions(address,address,uint256",
+                "sellOptions(address,address,uint256)",
                 optionAddress,
                 payoutTokenAddress,
                 amountToSell
             )
         );
         require(success, "OptionsAdapter: sellOptions delegatecall failed");
+    }
+
+    function exerciseOptions(
+        Options options,
+        address optionAddress,
+        uint256 amountToExercise
+    ) external {
+        (bool success, ) = address(options).delegatecall(
+            abi.encodeWithSignature(
+                "exerciseOptions(address,uint256)",
+                optionAddress,
+                amountToExercise
+            )
+        );
+        require(success, "OptionsAdapter: exerciseOptions delegatecall failed");
     }
 }
