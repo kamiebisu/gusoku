@@ -46,7 +46,9 @@
   "scripts": {
     "format": "npx prettier --write .",
     "eslint": "npx eslint . --ext ts",
-    "solhint": "npx solhint 'contracts/**/*.sol'"
+    "solhint": "npx solhint 'contracts/**/*.sol'",
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
   },
   "husky": {
     "hooks": {
