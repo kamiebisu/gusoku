@@ -65,13 +65,15 @@ contract OptionsWarchest {
         if (paymentTokenAddress == address(0)) {
             require(
                 address(this).balance >= premiumToPay,
-                "OptionsWarchest: the warchest doesn't have a sufficient ETH balance to buy the options"
+                "OptionsWarchest: the warchest doesn't have a sufficient " +
+                    "ETH balance to buy the options"
             );
         } else {
             IERC20 paymentToken = IERC20(paymentTokenAddress);
             require(
                 paymentToken.balanceOf(address(this)) >= premiumToPay,
-                "OptionsWarchest: the warchest doesn't have a sufficient paymentToken balance to buy the options"
+                "OptionsWarchest: the warchest doesn't have a sufficient " +
+                    "paymentToken balance to buy the options"
             );
         }
 

@@ -13,8 +13,8 @@ contract ConvexityAdapter is IOptionsAdapter {
     using SafeMath for uint256;
     using strings for *;
 
-    IOptionsFactory immutable optionsFactory;
-    IOptionsExchange immutable optionsExchange;
+    IOptionsFactory private immutable _optionsFactory;
+    IOptionsExchange private immutable _optionsExchange;
 
     constructor() {
         optionsFactory = IOptionsFactory(
@@ -25,7 +25,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         );
     }
 
-    function getFilteredOptions(string memory _filter)
+    function _getFilteredOptions(string memory _filter)
         internal
         view
         returns (address[] memory)
@@ -46,8 +46,7 @@ contract ConvexityAdapter is IOptionsAdapter {
                 // Use the strings library functions: toSlice(), contains()
                 (oToken.name().toSlice().contains(_filter.toSlice()) ||
                     oToken.symbol().toSlice().contains(_filter.toSlice())) &&
-                !oToken.hasExpired() &&
-                oToken.expiry() > block.timestamp
+                !oToken.hasExpired()
             ) {
                 createdOptions[optionIndex] = oTokenAddress;
                 optionIndex = optionIndex.add(1);

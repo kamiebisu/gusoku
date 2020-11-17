@@ -1,0 +1,3 @@
+node_modules/
+**/interfaces/**/*.sol
+contracts/libraries/strings.sol
