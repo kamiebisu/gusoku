@@ -1,7 +1,8 @@
 import ERC20 from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import {expect} from "chai";
-import {BigNumber, Contract, Signer} from "ethers";
+import {BigNumber, Signer} from "ethers";
 import {artifacts, deployments, ethers, network, waffle} from "hardhat";
+import {OptionsWarchest} from "../typechain/OptionsWarchest";
 import oToken from "./abis/convexity/IoToken.json";
 
 const provider = waffle.provider;
@@ -9,22 +10,22 @@ const provider = waffle.provider;
 describe("OptionsWarchest", () => {
   const ProtocolNames = {Convexity: 0};
 
-  let OptionsWarchest;
+  let deployedOptionsWarchest;
   let optionsWarchestArtifact;
-  let optionsWarchest: Contract;
+  let optionsWarchest: OptionsWarchest;
   let warchestOperator: Signer;
   let convexity: string;
 
   beforeEach(async () => {
     await deployments.fixture();
 
-    OptionsWarchest = await deployments.get("OptionsWarchest");
+    deployedOptionsWarchest = await deployments.get("OptionsWarchest");
     optionsWarchestArtifact = await artifacts.readArtifact("OptionsWarchest");
     optionsWarchest = new ethers.Contract(
-      OptionsWarchest.address,
+      deployedOptionsWarchest.address,
       optionsWarchestArtifact.abi,
       provider
-    );
+    ) as OptionsWarchest;
 
     [warchestOperator] = await ethers.getSigners();
 
