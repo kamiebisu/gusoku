@@ -29,6 +29,8 @@
     "hardhat-deploy": "^0.7.0-beta.28",
     "hardhat-deploy-ethers": "^0.3.0-beta.5",
     "hardhat-typechain": "^0.3.3",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.5.1",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.59",
     "ts-generator": "^0.1.1",
@@ -38,5 +40,23 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.2.2-solc-0.7"
+  },
+  "scripts": {
+    "format": "npx prettier --write .",
+    "lint": "npx eslint . --ext ts"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.@(ts)": [
+      "yarn lint",
+      "yarn format"
+    ],
+    "*.@(sol)": [
+      "yarn format"
+    ]
   }
 }
