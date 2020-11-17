@@ -17,10 +17,10 @@ contract ConvexityAdapter is IOptionsAdapter {
     IOptionsExchange private immutable _optionsExchange;
 
     constructor() {
-        optionsFactory = IOptionsFactory(
+        _optionsFactory = IOptionsFactory(
             0xcC5d905b9c2c8C9329Eb4e25dc086369D6C7777C
         );
-        optionsExchange = IOptionsExchange(
+        _optionsExchange = IOptionsExchange(
             0x39246c4F3F6592C974EBC44F80bA6dC69b817c71
         );
     }
@@ -30,7 +30,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         view
         returns (address[] memory)
     {
-        uint256 numOptionsContracts = optionsFactory
+        uint256 numOptionsContracts = _optionsFactory
             .getNumberOfOptionsContracts();
 
         // Options created by the OptionsFactory
@@ -39,7 +39,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         IoToken oToken;
         uint256 optionIndex = 0;
         for (uint256 i = 0; i < numOptionsContracts; i++) {
-            address oTokenAddress = optionsFactory.optionsContracts(i);
+            address oTokenAddress = _optionsFactory.optionsContracts(i);
             oToken = IoToken(oTokenAddress);
             // Only add options that have not expired yet
             if (
@@ -64,7 +64,7 @@ contract ConvexityAdapter is IOptionsAdapter {
     }
 
     function getPutOptions() external view override returns (address[] memory) {
-        return getFilteredOptions("Put");
+        return _getFilteredOptions("Put");
     }
 
     function getCallOptions()
@@ -73,7 +73,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         override
         returns (address[] memory)
     {
-        return getFilteredOptions("Call");
+        return _getFilteredOptions("Call");
     }
 
     function getPrice(
@@ -82,7 +82,7 @@ contract ConvexityAdapter is IOptionsAdapter {
         uint256 amountToBuy
     ) external view override returns (uint256) {
         return
-            optionsExchange.premiumToPay(
+            _optionsExchange.premiumToPay(
                 optionAddress,
                 paymentTokenAddress,
                 amountToBuy
@@ -98,13 +98,13 @@ contract ConvexityAdapter is IOptionsAdapter {
         IERC20 paymentToken = IERC20(paymentTokenAddress);
         if (
             paymentTokenAddress != address(0) &&
-            paymentToken.allowance(address(this), address(optionsExchange)) !=
+            paymentToken.allowance(address(this), address(_optionsExchange)) !=
             type(uint256).max
         ) {
-            paymentToken.approve(address(optionsExchange), type(uint256).max);
+            paymentToken.approve(address(_optionsExchange), type(uint256).max);
         }
 
-        optionsExchange.buyOTokens(
+        _optionsExchange.buyOTokens(
             address(this),
             optionAddress,
             paymentTokenAddress,
@@ -120,13 +120,13 @@ contract ConvexityAdapter is IOptionsAdapter {
         // Need to approve the oToken before spending it
         IoToken optionToken = IoToken(optionAddress);
         if (
-            optionToken.allowance(address(this), address(optionsExchange)) !=
+            optionToken.allowance(address(this), address(_optionsExchange)) !=
             type(uint256).max
         ) {
-            optionToken.approve(address(optionsExchange), type(uint256).max);
+            optionToken.approve(address(_optionsExchange), type(uint256).max);
         }
 
-        optionsExchange.sellOTokens(
+        _optionsExchange.sellOTokens(
             address(this),
             optionAddress,
             payoutTokenAddress,
