@@ -3,10 +3,10 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./OptionsAdapter.sol";
+import "./OptionsProtocolAdapter.sol";
 
 contract OptionsWarchest {
-    using OptionsAdapter for Options;
+    using OptionsProtocolAdapter for Options;
 
     enum ProtocolNames {Convexity}
 

@@ -3,13 +3,13 @@ pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../../interfaces/IOptionsAdapter.sol";
+import "../../interfaces/IDiscreteOptionsProtocolAdapter.sol";
 import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "../../libraries/strings.sol";
 
-contract ConvexityAdapter is IOptionsAdapter {
+contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
     using SafeMath for uint256;
     using strings for *;
 

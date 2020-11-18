@@ -9,13 +9,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const convexityAdapter = await deployments.get("ConvexityAdapter");
 
-  const optionsAdapter = await deployments.get("OptionsAdapter");
+  const optionsAdapter = await deployments.get("OptionsProtocolAdapter");
 
   await deploy("OptionsWarchest", {
     from: deployer,
     args: [convexityAdapter.address],
     libraries: {
-      OptionsAdapter: optionsAdapter.address,
+      OptionsProtocolAdapter: optionsAdapter.address,
     },
     log: true,
     deterministicDeployment: true,
@@ -24,4 +24,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ["OptionsWarchest"];
-func.dependencies = ["ConvexityAdapter", "OptionsAdapter"];
+func.dependencies = ["ConvexityAdapter", "OptionsProtocolAdapter"];

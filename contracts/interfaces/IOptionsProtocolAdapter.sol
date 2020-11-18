@@ -5,13 +5,7 @@ pragma solidity ^0.7.0;
 /// @author The Gusoku contributors
 /// @notice Interface that allows uniformly interacting with different options protocols
 /// @dev Every options protocol adapter MUST implement this interface
-interface IOptionsAdapter {
-    ///@notice Query and return available PUT options
-    function getPutOptions() external view returns (address[] memory);
-
-    ///@notice Query and return available CALL options
-    function getCallOptions() external view returns (address[] memory);
-
+interface IOptionsProtocolAdapter {
     ///@notice Query and return price for a given PUT or CALL option
     function getPrice(
         address optionAddress,
@@ -27,15 +21,11 @@ interface IOptionsAdapter {
         uint256 amountToBuy
     ) external payable;
 
-    ///@notice Sell a given PUT or CALL option
-    function sellOptions(
-        address optionAddress,
-        address payoutTokenAddress,
-        uint256 amountToSell
-    ) external;
-
     ///@notice Exercise a given PUT or CALL option
     function exerciseOptions(address optionAddress, uint256 amountToExercise)
         external
         payable;
+
+    ///@notice should be false for AMM and true for discrete protocol
+    //function isDiscrete() external view returns (bool);
 }

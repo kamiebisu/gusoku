@@ -2,7 +2,7 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-library OptionsAdapter {
+library OptionsProtocolAdapter {
     function buyOptions(
         Options options,
         address optionAddress,

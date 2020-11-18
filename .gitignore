@@ -109,3 +109,6 @@ artifacts
 
 # Typechain artifacts
 typechain/
+
+# IntelliJ files
+.idea
