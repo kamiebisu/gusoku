@@ -34,17 +34,20 @@ contract OptionsStore {
         OptionMarket optionMarket,
         address optionAddress
     ) internal returns (uint256) {
-        currentOptionIndex = currentOptionIndex.add(1);
+        _currentOptionIndex = _currentOptionIndex.add(1);
 
         //clear any values if there are any (there shouldnt be)
-        delete (options[currentOptionIndex]);
-        delete (addressDetails[currentOptionIndex]);
-        delete (attributeDetails[currentOptionIndex]);
+        delete (_options[_currentOptionIndex]);
+        delete (_addressDetails[_currentOptionIndex]);
+        delete (_attributeDetails[_currentOptionIndex]);
 
-        options[currentOptionIndex] = Option(OptionStyle.ADDRESS, optionMarket);
-        addressDetails[currentOptionIndex] = optionAddress;
+        _options[_currentOptionIndex] = Option(
+            OptionStyle.ADDRESS,
+            optionMarket
+        );
+        _addressDetails[_currentOptionIndex] = optionAddress;
 
-        return currentOptionIndex;
+        return _currentOptionIndex;
     }
 
     function _createAttributeOption(
@@ -53,14 +56,14 @@ contract OptionsStore {
         uint256 strikePrice,
         uint256 expiryDate
     ) internal returns (uint256) {
-        currentOptionIndex = currentOptionIndex++;
+        _currentOptionIndex = _currentOptionIndex++;
 
         //clear any values if there are any (there shouldnt be)
-        delete (options[currentOptionIndex]);
-        delete (addressDetails[currentOptionIndex]);
-        delete (attributeDetails[currentOptionIndex]);
+        delete (_options[_currentOptionIndex]);
+        delete (_addressDetails[_currentOptionIndex]);
+        delete (_attributeDetails[_currentOptionIndex]);
 
-        options[currentOptionIndex] = Option(
+        _options[_currentOptionIndex] = Option(
             OptionStyle.ATTRIBUTE,
             optionMarket
         );
@@ -69,8 +72,8 @@ contract OptionsStore {
             strikePrice,
             expiryDate
         );
-        attributeDetails[currentOptionIndex] = attributes;
+        _attributeDetails[_currentOptionIndex] = attributes;
 
-        return currentOptionIndex;
+        return _currentOptionIndex;
     }
 }

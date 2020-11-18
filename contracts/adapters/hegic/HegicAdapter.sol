@@ -42,7 +42,7 @@ contract HegicAdapter is OptionsStore {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external view returns (uint256) {
-        OptionAttributes memory attributes = attributeDetails[optionID];
+        OptionAttributes memory attributes = _attributeDetails[optionID];
 
         //TODO: this address needs to not be hardcoded and come from a param...
         (uint256 total, , , ) = IHegicOptions(
@@ -63,7 +63,7 @@ contract HegicAdapter is OptionsStore {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable {
-        OptionAttributes memory attributes = attributeDetails[optionID];
+        OptionAttributes memory attributes = _attributeDetails[optionID];
 
         //TODO: this address needs to not be hardcoded and come from a param...
         //TODO: We need to store the return option id in the store as purchased option with details
