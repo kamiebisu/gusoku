@@ -8,6 +8,7 @@ import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "../../libraries/strings.sol";
+import "hardhat/console.sol";
 
 contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
     using SafeMath for uint256;
@@ -134,11 +135,11 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
         );
     }
 
-    function exerciseOptions(address optionAddress, uint256 amountToExercise)
-        external
-        payable
-        override
-    {
+    function exerciseOptions(
+        address optionAddress,
+        uint256 amountToExercise,
+        address[] memory vaultOwners
+    ) external payable override {
         IoToken optionToken = IoToken(optionAddress);
 
         // Approve the oToken contract to transfer the caller's optionToken balance
@@ -182,9 +183,6 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
             );
         }
 
-        optionToken.exercise{value: msg.value}(
-            amountToExercise,
-            optionToken.getVaultOwners()
-        );
+        optionToken.exercise{value: msg.value}(amountToExercise, vaultOwners);
     }
 }

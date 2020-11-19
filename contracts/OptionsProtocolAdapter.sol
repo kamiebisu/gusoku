@@ -40,13 +40,15 @@ library OptionsProtocolAdapter {
     function exerciseOptions(
         Options options,
         address optionAddress,
-        uint256 amountToExercise
+        uint256 amountToExercise,
+        address[] memory vaultOwners
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "exerciseOptions(address,uint256)",
+                "exerciseOptions(address,uint256,address[])",
                 optionAddress,
-                amountToExercise
+                amountToExercise,
+                vaultOwners
             )
         );
         require(success, "OptionsAdapter: exerciseOptions delegatecall failed");

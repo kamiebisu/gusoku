@@ -4,6 +4,7 @@ import {BigNumber, Signer} from "ethers";
 import {artifacts, deployments, ethers, network, waffle} from "hardhat";
 import {OptionsWarchest} from "../typechain/OptionsWarchest";
 import oToken from "./abis/convexity/IoToken.json";
+import {getAllVaultsForOption} from "./utils/convexity/graph";
 
 const provider = waffle.provider;
 
@@ -120,9 +121,23 @@ describe("OptionsWarchest", () => {
           );
       }
 
+      const vaults = await getAllVaultsForOption(recentPutOption);
+
+      const owners: Array<string> = [];
+      vaults.forEach((vault) => {
+        if (vault.collateral != "0") {
+          owners.push(vault.owner);
+        }
+      });
+
       await optionsWarchest
         .connect(warchestOperator)
-        .exerciseOptions(convexity, recentPutOption, BigNumber.from("1"));
+        .exerciseOptions(
+          convexity,
+          recentPutOption,
+          BigNumber.from("1"),
+          owners
+        );
     }
   });
 
@@ -137,9 +152,52 @@ describe("OptionsWarchest", () => {
           convexity,
           availableCallOptions[0],
           ethers.constants.AddressZero,
-          ethers.BigNumber.from(2)
+          ethers.BigNumber.from("2")
         )
       ).to.gt(0);
+
+      // Test buying a call option. Use a recent one so that the probability
+      // of it not having expired yet is bigger
+      const recentCallOption =
+        availableCallOptions[availableCallOptions.length - 2];
+
+      await optionsWarchest
+        .connect(warchestOperator)
+        .buyOptions(
+          convexity,
+          recentCallOption,
+          ethers.constants.AddressZero,
+          ethers.BigNumber.from("2")
+        );
+
+      const optionToken = new ethers.Contract(
+        recentCallOption,
+        oToken,
+        provider
+      );
+
+      expect(await optionToken.balanceOf(optionsWarchest.address)).to.equal(2);
+
+      // Test selling the option that was just purchased
+      const warchestBalanceBeforeSelling = await provider.getBalance(
+        optionsWarchest.address
+      );
+      console.log(recentCallOption);
+      await optionsWarchest
+        .connect(warchestOperator)
+        .sellOptions(
+          convexity,
+          recentCallOption,
+          ethers.constants.AddressZero,
+          BigNumber.from("1")
+        );
+
+      expect(await optionToken.balanceOf(optionsWarchest.address)).to.equal(1);
+      expect(await provider.getBalance(optionsWarchest.address)).to.gt(
+        warchestBalanceBeforeSelling
+      );
+
+      // TODO: Test exercising the option
     }
   });
 });

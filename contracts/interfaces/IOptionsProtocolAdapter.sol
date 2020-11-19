@@ -22,9 +22,11 @@ interface IOptionsProtocolAdapter {
     ) external payable;
 
     ///@notice Exercise a given PUT or CALL option
-    function exerciseOptions(address optionAddress, uint256 amountToExercise)
-        external
-        payable;
+    function exerciseOptions(
+        address optionAddress,
+        uint256 amountToExercise,
+        address[] memory vaultOwners
+    ) external payable;
 
     ///@notice should be false for AMM and true for discrete protocol
     //function isDiscrete() external view returns (bool);

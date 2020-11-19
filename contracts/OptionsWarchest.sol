@@ -105,8 +105,13 @@ contract OptionsWarchest {
     function exerciseOptions(
         Options optionsProtocol,
         address optionAddress,
-        uint256 amountToExercise
+        uint256 amountToExercise,
+        address[] memory vaultOwners
     ) public payable {
-        optionsProtocol.exerciseOptions(optionAddress, amountToExercise);
+        optionsProtocol.exerciseOptions(
+            optionAddress,
+            amountToExercise,
+            vaultOwners
+        );
     }
 }
