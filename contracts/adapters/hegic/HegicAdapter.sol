@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -7,10 +8,14 @@ import "../../interfaces/IOptionsProtocolAdapter.sol";
 import "./interfaces/IHegicOptions.sol";
 import "../../libraries/strings.sol";
 import "../domain/OptionsStore.sol";
+import "./../domain/OptionsModel.sol";
 
 contract HegicAdapter is OptionsStore {
     using SafeMath for uint256;
     using strings for *;
+
+    //TODO: This should be passed in as a param to methods. Mocking here for now...
+    OptionsStore public store = new OptionsStore();
 
     //base asset => pool details
     mapping(address => HegicPool) internal _optionPools;
@@ -42,17 +47,17 @@ contract HegicAdapter is OptionsStore {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external view returns (uint256) {
-        OptionAttributes memory attributes = _attributeDetails[optionID];
+        OptionsModel.Option memory option = store.getOptionFromID(optionID);
 
         //TODO: this address needs to not be hardcoded and come from a param...
         (uint256 total, , , ) = IHegicOptions(
             0x0000000000000000000000000000000000000000
         )
             .fees(
-            attributes.expiryDate.sub(block.timestamp),
+            option.expiryDate.sub(block.timestamp),
             amountToBuy,
-            attributes.strikePrice,
-            attributes.optionType == OptionType.PUT ? 1 : 2
+            option.strikePrice,
+            option.optionType == OptionsModel.OptionType.PUT ? 1 : 2
         );
 
         return total;
@@ -63,7 +68,7 @@ contract HegicAdapter is OptionsStore {
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable {
-        OptionAttributes memory attributes = _attributeDetails[optionID];
+        OptionsModel.Option memory option = store.getOptionFromID(optionID);
 
         //TODO: this address needs to not be hardcoded and come from a param...
         //TODO: We need to store the return option id in the store as purchased option with details
@@ -71,10 +76,10 @@ contract HegicAdapter is OptionsStore {
             0x0000000000000000000000000000000000000000
         )
             .create(
-            attributes.expiryDate.sub(block.timestamp),
+            option.expiryDate.sub(block.timestamp),
             amountToBuy,
-            attributes.strikePrice,
-            attributes.optionType == OptionType.PUT ? 1 : 2
+            option.strikePrice,
+            option.optionType == OptionsModel.OptionType.PUT ? 1 : 2
         );
     }
 

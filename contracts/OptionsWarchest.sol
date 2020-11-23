@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./OptionsProtocolAdapter.sol";
+import "./adapters/domain/OptionsStore.sol";
 
 contract OptionsWarchest {
     using OptionsProtocolAdapter for Options;
@@ -11,6 +12,7 @@ contract OptionsWarchest {
     enum ProtocolNames {Convexity}
 
     Options[1] public optionsProtocols;
+    OptionsStore internal _optionsStore = new OptionsStore();
 
     constructor(address _convexity) {
         optionsProtocols[uint256(ProtocolNames.Convexity)] = Options(
