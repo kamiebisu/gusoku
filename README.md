@@ -40,11 +40,10 @@ Separate contracts that implement the **IOptionsAdapter** interface.
 - **ConvexityAdapter**
 - **GammaAdapter**
 - **HegicAdapter**
-- **AuctusAdapter**
+- **DeriswapAdapter**
 
 #### Future adapters for options protocols that are not live yet
 
-- **Adapter to Andre Cronje's options solution**
 - **PrimitiveAdapter**
 - **OptinoAdapter**
 
