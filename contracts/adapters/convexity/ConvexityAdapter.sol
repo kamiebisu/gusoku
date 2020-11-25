@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -63,17 +64,27 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
         return nonExpiredOptions;
     }
 
-    function getPutOptions() external view override returns (address[] memory) {
-        return _getFilteredOptions("Put");
+    function getPutOptions()
+        external
+        view
+        override
+        returns (OptionsModel.Option[] memory)
+    {
+        //TODO: Fix this. returning mock for now...
+        //return _getFilteredOptions("Put");
+        OptionsModel.Option[] memory putOptions = OptionsModel.Option[];
+        return putOptions;
     }
 
     function getCallOptions()
         external
         view
         override
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
-        return _getFilteredOptions("Call");
+        //TODO: Fix this. returning mock for now...
+        //return _getFilteredOptions("Call");
+        return OptionsModel.Option[];
     }
 
     function getPrice(
@@ -113,12 +124,12 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
     }
 
     function sellOptions(
-        address optionAddress,
+        OptionsModel.Option memory option,
         address payoutTokenAddress,
         uint256 amountToSell
     ) external override {
         // Need to approve the oToken before spending it
-        IoToken optionToken = IoToken(optionAddress);
+        IoToken optionToken = IoToken(option.tokenAddress);
         if (
             optionToken.allowance(address(this), address(_optionsExchange)) !=
             type(uint256).max
@@ -128,7 +139,7 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
 
         _optionsExchange.sellOTokens(
             address(this),
-            optionAddress,
+            option.tokenAddress,
             payoutTokenAddress,
             amountToSell
         );

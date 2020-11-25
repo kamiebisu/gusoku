@@ -12,7 +12,6 @@ contract OptionsStore {
     mapping(uint256 => OptionsModel.Option) public options;
 
     function createOption(
-        OptionsModel.OptionStyle optionStyle,
         OptionsModel.OptionMarket optionMarket,
         OptionsModel.OptionType optionType,
         uint256 strikePrice,
@@ -25,7 +24,6 @@ contract OptionsStore {
         delete (options[currentOptionIndex]);
 
         options[currentOptionIndex] = OptionsModel.Option(
-            optionStyle,
             optionMarket,
             optionType,
             strikePrice,

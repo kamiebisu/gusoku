@@ -2,6 +2,8 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "./adapters/domain/OptionsModel.sol";
+
 library OptionsProtocolAdapter {
     function buyOptions(
         Options options,
@@ -22,14 +24,14 @@ library OptionsProtocolAdapter {
 
     function sellOptions(
         Options options,
-        address optionAddress,
+        OptionsModel.Option memory option,
         address payoutTokenAddress,
         uint256 amountToSell
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
                 "sellOptions(address,address,uint256)",
-                optionAddress,
+                option.tokenAddress,
                 payoutTokenAddress,
                 amountToSell
             )
@@ -55,25 +57,25 @@ library OptionsProtocolAdapter {
     function getPutOptions(Options options)
         external
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature("getPutOptions()")
         );
         require(success, "OptionsAdapter: getPutOptions staticcall failed");
-        return abi.decode(result, (address[]));
+        return abi.decode(result, (OptionsModel.Option[]));
     }
 
     function getCallOptions(Options options)
         external
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature("getCallOptions()")
         );
         require(success, "OptionsAdapter: getCallOptions staticcall failed");
-        return abi.decode(result, (address[]));
+        return abi.decode(result, (OptionsModel.Option[]));
     }
 
     function getPrice(

@@ -25,7 +25,7 @@ contract OptionsWarchest {
     function getPutOptions(Options optionsProtocol)
         public
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getPutOptions();
     }
@@ -33,7 +33,7 @@ contract OptionsWarchest {
     function getCallOptions(Options optionsProtocol)
         public
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getCallOptions();
     }
@@ -86,22 +86,18 @@ contract OptionsWarchest {
 
     function sellOptions(
         Options optionsProtocol,
-        address optionAddress,
+        OptionsModel.Option memory option,
         address payoutTokenAddress,
         uint256 amountToSell
     ) public {
         // Ensure that the OptionsWarchest holds enough options to sell
-        IERC20 optionToken = IERC20(optionAddress);
+        IERC20 optionToken = IERC20(option.tokenAddress);
         require(
             optionToken.balanceOf(address(this)) >= amountToSell,
             "OptionsWarchest: there's not enough options to sell"
         );
 
-        optionsProtocol.sellOptions(
-            optionAddress,
-            payoutTokenAddress,
-            amountToSell
-        );
+        optionsProtocol.sellOptions(option, payoutTokenAddress, amountToSell);
     }
 
     function exerciseOptions(
