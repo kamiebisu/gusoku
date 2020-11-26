@@ -53,7 +53,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "yarn solhint && lint-staged"
     }
   },
   "lint-staged": {
@@ -62,7 +62,6 @@
       "yarn format"
     ],
     "*.@(sol)": [
-      "yarn solhint",
       "yarn format"
     ]
   }
