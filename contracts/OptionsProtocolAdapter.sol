@@ -8,12 +8,12 @@ library OptionsProtocolAdapter {
     function buyOptions(
         Options options,
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "buyOptions(uint256,address,uint256)",
+                "buyOptions(uint256,uint256,address)",
                 optionID,
                 paymentTokenAddress,
                 amountToBuy
@@ -25,15 +25,15 @@ library OptionsProtocolAdapter {
     function sellOptions(
         Options options,
         uint256 optionID,
-        address payoutTokenAddress,
-        uint256 amountToSell
+        uint256 amountToSell,
+        address payoutTokenAddress
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "sellOptions(uint256,address,uint256)",
+                "sellOptions(uint256,uint256,address)",
                 optionID,
-                payoutTokenAddress,
-                amountToSell
+                amountToSell,
+                payoutTokenAddress
             )
         );
         require(success, "OptionsAdapter: sellOptions delegatecall failed");
@@ -83,12 +83,12 @@ library OptionsProtocolAdapter {
     function getPrice(
         Options options,
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
-                "getPrice(uint256,address,uint256)",
+                "getPrice(uint256,uint256,address)",
                 optionID,
                 paymentTokenAddress,
                 amountToBuy

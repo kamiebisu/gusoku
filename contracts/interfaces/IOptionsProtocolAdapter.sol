@@ -9,16 +9,16 @@ interface IOptionsProtocolAdapter {
     ///@notice Query and return price for a given PUT or CALL option
     function getPrice(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external view returns (uint256);
 
     ///@notice Buy a given PUT or CALL option
     ///@dev The function is payable because it needs to be able to receive ETH as a paymentToken
     function buyOptions(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external payable;
 
     ///@notice Exercise a given PUT or CALL option

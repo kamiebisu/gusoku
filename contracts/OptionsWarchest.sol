@@ -40,28 +40,28 @@ contract OptionsWarchest {
     function getOptionPrice(
         Options optionsProtocol,
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) public view returns (uint256) {
         return
             optionsProtocol.getPrice(
                 optionID,
-                paymentTokenAddress,
-                amountToBuy
+                amountToBuy,
+                paymentTokenAddress
             );
     }
 
     function buyOptions(
         Options optionsProtocol,
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) public payable {
         // Ensure that the OptionsWarchest have sufficient paymentTokens before buying the options
         uint256 premiumToPay = optionsProtocol.getPrice(
             optionID,
-            paymentTokenAddress,
-            amountToBuy
+            amountToBuy,
+            paymentTokenAddress
         );
         if (paymentTokenAddress == address(0)) {
             require(
@@ -76,14 +76,14 @@ contract OptionsWarchest {
             );
         }
 
-        optionsProtocol.buyOptions(optionID, paymentTokenAddress, amountToBuy);
+        optionsProtocol.buyOptions(optionID, amountToBuy, paymentTokenAddress);
     }
 
     function sellOptions(
         Options optionsProtocol,
         uint256 optionID,
-        address payoutTokenAddress,
-        uint256 amountToSell
+        uint256 amountToSell,
+        address payoutTokenAddress
     ) public {
         address optionAddress = optionsProtocol.options(optionID).tokenAddress;
         // Ensure that the OptionsWarchest holds enough options to sell
@@ -93,7 +93,7 @@ contract OptionsWarchest {
             "OptionsWarchest: there's not enough options to sell"
         );
 
-        optionsProtocol.sellOptions(optionID, payoutTokenAddress, amountToSell);
+        optionsProtocol.sellOptions(optionID, amountToSell, payoutTokenAddress);
     }
 
     function exerciseOptions(

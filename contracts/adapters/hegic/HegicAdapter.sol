@@ -44,8 +44,8 @@ contract HegicAdapter is OptionsStore {
 
     function getPrice(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external view returns (uint256) {
         OptionsModel.Option memory option = store.getOptionFromID(optionID);
 
@@ -65,8 +65,8 @@ contract HegicAdapter is OptionsStore {
 
     function buyOptions(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external payable {
         OptionsModel.Option memory option = store.getOptionFromID(optionID);
 

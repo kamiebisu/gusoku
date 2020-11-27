@@ -125,8 +125,8 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
 
     function getPrice(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external view override returns (uint256) {
         return
             _optionsExchange.premiumToPay(
@@ -138,8 +138,8 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
 
     function buyOptions(
         uint256 optionID,
-        address paymentTokenAddress,
-        uint256 amountToBuy
+        uint256 amountToBuy,
+        address paymentTokenAddress
     ) external payable override {
         address optionAddress = options[optionID].tokenAddress;
         // Need to approve any ERC20 before spending it
@@ -162,8 +162,8 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
 
     function sellOptions(
         uint256 optionID,
-        address payoutTokenAddress,
-        uint256 amountToSell
+        uint256 amountToSell,
+        address payoutTokenAddress
     ) external override {
         address optionAddress = options[optionID].tokenAddress;
         // Need to approve the oToken before spending it

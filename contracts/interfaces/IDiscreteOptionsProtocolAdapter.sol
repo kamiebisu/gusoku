@@ -25,7 +25,7 @@ interface IDiscreteOptionsProtocolAdapter is IOptionsProtocolAdapter {
     ///@notice Sell a given PUT or CALL option
     function sellOptions(
         uint256 optionID,
-        address payoutTokenAddress,
-        uint256 amountToSell
+        uint256 amountToSell,
+        address payoutTokenAddress
     ) external;
 }
