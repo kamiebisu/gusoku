@@ -85,8 +85,7 @@ contract OptionsWarchest {
         address payoutTokenAddress,
         uint256 amountToSell
     ) public {
-        OptionsModel.Option[] memory options = optionsProtocol.options();
-        address optionAddress = options[optionID].tokenAddress;
+        address optionAddress = optionsProtocol.options(optionID).tokenAddress;
         // Ensure that the OptionsWarchest holds enough options to sell
         IERC20 optionToken = IERC20(optionAddress);
         require(

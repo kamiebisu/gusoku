@@ -98,16 +98,16 @@ library OptionsProtocolAdapter {
         return abi.decode(result, (uint256));
     }
 
-    function options(Options options)
+    function options(Options options, uint256 optionID)
         external
         view
-        returns (OptionsModel.Option[] memory)
+        returns (OptionsModel.Option memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
-            abi.encodeWithSignature("options()")
+            abi.encodeWithSignature("options(uint256)", optionID)
         );
         require(success, "OptionsAdapter: options staticcall failed");
-        return abi.decode(result, (OptionsModel.Option[]));
+        return abi.decode(result, (OptionsModel.Option));
     }
 }
 
