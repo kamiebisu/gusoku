@@ -3,9 +3,9 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 library OptionsModel {
-    enum OptionType {CALL, PUT}
-
     enum OptionMarket {CONVEXITY, HEGIC}
+
+    enum OptionType {CALL, PUT}
 
     struct Option {
         OptionMarket optionMarket;

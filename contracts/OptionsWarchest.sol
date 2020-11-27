@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./OptionsProtocolAdapter.sol";
+import "./adapters/domain/OptionsModel.sol";
 
 contract OptionsWarchest {
     using OptionsProtocolAdapter for Options;
@@ -23,7 +24,7 @@ contract OptionsWarchest {
     function getPutOptions(Options optionsProtocol)
         public
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getPutOptions();
     }
@@ -31,20 +32,20 @@ contract OptionsWarchest {
     function getCallOptions(Options optionsProtocol)
         public
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getCallOptions();
     }
 
     function getOptionPrice(
         Options optionsProtocol,
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) public view returns (uint256) {
         return
             optionsProtocol.getPrice(
-                optionAddress,
+                optionID,
                 paymentTokenAddress,
                 amountToBuy
             );
@@ -52,13 +53,13 @@ contract OptionsWarchest {
 
     function buyOptions(
         Options optionsProtocol,
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) public payable {
         // Ensure that the OptionsWarchest have sufficient paymentTokens before buying the options
         uint256 premiumToPay = optionsProtocol.getPrice(
-            optionAddress,
+            optionID,
             paymentTokenAddress,
             amountToBuy
         );
@@ -75,19 +76,17 @@ contract OptionsWarchest {
             );
         }
 
-        optionsProtocol.buyOptions(
-            optionAddress,
-            paymentTokenAddress,
-            amountToBuy
-        );
+        optionsProtocol.buyOptions(optionID, paymentTokenAddress, amountToBuy);
     }
 
     function sellOptions(
         Options optionsProtocol,
-        address optionAddress,
+        uint256 optionID,
         address payoutTokenAddress,
         uint256 amountToSell
     ) public {
+        OptionsModel.Option[] memory options = optionsProtocol.options();
+        address optionAddress = options[optionID].tokenAddress;
         // Ensure that the OptionsWarchest holds enough options to sell
         IERC20 optionToken = IERC20(optionAddress);
         require(
@@ -95,21 +94,17 @@ contract OptionsWarchest {
             "OptionsWarchest: there's not enough options to sell"
         );
 
-        optionsProtocol.sellOptions(
-            optionAddress,
-            payoutTokenAddress,
-            amountToSell
-        );
+        optionsProtocol.sellOptions(optionID, payoutTokenAddress, amountToSell);
     }
 
     function exerciseOptions(
         Options optionsProtocol,
-        address optionAddress,
+        uint256 optionID,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) public payable {
         optionsProtocol.exerciseOptions(
-            optionAddress,
+            optionID,
             amountToExercise,
             vaultOwners
         );

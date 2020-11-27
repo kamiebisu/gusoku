@@ -1,3 +1,4 @@
 node_modules/
 **/interfaces/**/*.sol
 contracts/libraries/strings.sol
+contracts/libraries/ABDKMath64x64.sol

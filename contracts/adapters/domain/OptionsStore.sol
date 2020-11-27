@@ -19,9 +19,7 @@ contract OptionsStore {
         address tokenAddress,
         address settlementAsset,
         address paymentAsset
-    ) public returns (uint256) {
-        currentOptionIndex = currentOptionIndex.add(1);
-
+    ) public {
         //clear any values if there are any (there shouldnt be)
         delete (options[currentOptionIndex]);
 
@@ -35,6 +33,6 @@ contract OptionsStore {
             paymentAsset
         );
 
-        return currentOptionIndex;
+        currentOptionIndex = currentOptionIndex.add(1);
     }
 }

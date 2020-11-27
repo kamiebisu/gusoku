@@ -8,7 +8,7 @@ pragma solidity ^0.7.5;
 interface IOptionsProtocolAdapter {
     ///@notice Query and return price for a given PUT or CALL option
     function getPrice(
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external view returns (uint256);
@@ -16,14 +16,14 @@ interface IOptionsProtocolAdapter {
     ///@notice Buy a given PUT or CALL option
     ///@dev The function is payable because it needs to be able to receive ETH as a paymentToken
     function buyOptions(
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable;
 
     ///@notice Exercise a given PUT or CALL option
     function exerciseOptions(
-        address optionAddress,
+        uint256 optionID,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable;

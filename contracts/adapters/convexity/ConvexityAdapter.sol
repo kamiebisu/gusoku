@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.5;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -9,8 +10,10 @@ import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "../../libraries/strings.sol";
 import "hardhat/console.sol";
+import "../domain/OptionsStore.sol";
+import "../domain/OptionsModel.sol";
 
-contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
+contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
     using SafeMath for uint256;
     using strings for *;
 
@@ -26,75 +29,102 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
         );
     }
 
-    function _getFilteredOptions(string memory _filter)
-        internal
-        view
-        returns (address[] memory)
-    {
+    function _updateOptionsStore() internal {
         uint256 numOptionsContracts = _optionsFactory
             .getNumberOfOptionsContracts();
+        uint256 currentOptionIndex = this.currentOptionIndex();
+        if (numOptionsContracts != currentOptionIndex) {
+            for (uint256 i = currentOptionIndex; i < numOptionsContracts; i++) {
+                address oTokenAddress = _optionsFactory.optionsContracts(i);
+                IoToken oToken = IoToken(oTokenAddress);
+                bool isPut = oToken.name().toSlice().contains("Put".toSlice());
+                (uint256 value, int32 exponent) = oToken.strikePrice();
+                // TODO: Fix exponentiation power is not allowed to be a signed integer type
+                uint256 strikePrice = value * uint256(uint32(10)**exponent);
+                createOption(
+                    OptionsModel.OptionMarket.CONVEXITY,
+                    isPut
+                        ? OptionsModel.OptionType.PUT
+                        : OptionsModel.OptionType.CALL,
+                    strikePrice,
+                    oToken.expiry(),
+                    oTokenAddress,
+                    oToken.strike(),
+                    address(0) // Default to ETH for now
+                );
+            }
+        }
+    }
 
-        // Options created by the OptionsFactory
-        address[] memory createdOptions = new address[](numOptionsContracts);
+    function _getFilteredOptions(OptionsModel.OptionType _optionType)
+        internal
+        returns (OptionsModel.Option[] memory)
+    {
+        // First, update the options cache if necessary
+        _updateOptionsStore();
 
-        IoToken oToken;
-        uint256 optionIndex = 0;
-        for (uint256 i = 0; i < numOptionsContracts; i++) {
-            address oTokenAddress = _optionsFactory.optionsContracts(i);
-            oToken = IoToken(oTokenAddress);
-            // Only add options that have not expired yet
-            if (
-                // Use the strings library functions: toSlice(), contains()
-                (oToken.name().toSlice().contains(_filter.toSlice()) ||
-                    oToken.symbol().toSlice().contains(_filter.toSlice())) &&
-                !oToken.hasExpired()
-            ) {
-                createdOptions[optionIndex] = oTokenAddress;
-                optionIndex = optionIndex.add(1);
+        OptionsModel.Option[] memory currentOptions = new OptionsModel.Option[](
+            currentOptionIndex
+        );
+        uint256 numFilteredOptions = 0;
+        for (uint256 i = 0; i < currentOptionIndex; i++) {
+            if (options[i].optionType == _optionType) {
+                currentOptions[numFilteredOptions] = options[i];
+                numFilteredOptions = numFilteredOptions.add(1);
             }
         }
 
         // Trim array removing zero addresses, just for simplicity when it's consumed.
         // No gas is saved anyways.
-        address[] memory nonExpiredOptions = new address[](optionIndex);
-        for (uint256 i = 0; i < optionIndex; i++) {
-            nonExpiredOptions[i] = createdOptions[i];
+
+
+            OptionsModel.Option[] memory filteredOptions
+         = new OptionsModel.Option[](numFilteredOptions);
+
+        for (uint256 i = 0; i < numFilteredOptions; i++) {
+            filteredOptions[i] = currentOptions[i];
         }
 
-        return nonExpiredOptions;
+        return filteredOptions;
     }
 
-    function getPutOptions() external view override returns (address[] memory) {
-        return _getFilteredOptions("Put");
+    function getPutOptions()
+        external
+        view
+        override
+        returns (OptionsModel.Option[] memory)
+    {
+        return _getFilteredOptions(OptionsModel.OptionType.PUT);
     }
 
     function getCallOptions()
         external
         view
         override
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
-        return _getFilteredOptions("Call");
+        return _getFilteredOptions(OptionsModel.OptionType.CALL);
     }
 
     function getPrice(
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external view override returns (uint256) {
         return
             _optionsExchange.premiumToPay(
-                optionAddress,
+                options[optionID].tokenAddress,
                 paymentTokenAddress,
                 amountToBuy
             );
     }
 
     function buyOptions(
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external payable override {
+        address optionAddress = options[optionID].tokenAddress;
         // Need to approve any ERC20 before spending it
         IERC20 paymentToken = IERC20(paymentTokenAddress);
         if (
@@ -114,10 +144,11 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
     }
 
     function sellOptions(
-        address optionAddress,
+        uint256 optionID,
         address payoutTokenAddress,
         uint256 amountToSell
     ) external override {
+        address optionAddress = options[optionID].tokenAddress;
         // Need to approve the oToken before spending it
         IoToken optionToken = IoToken(optionAddress);
         if (
@@ -136,10 +167,11 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter {
     }
 
     function exerciseOptions(
-        address optionAddress,
+        uint256 optionID,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable override {
+        address optionAddress = options[optionID].tokenAddress;
         IoToken optionToken = IoToken(optionAddress);
 
         // Approve the oToken contract to transfer the caller's optionToken balance

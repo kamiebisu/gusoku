@@ -2,17 +2,19 @@
 pragma solidity ^0.7.5;
 pragma abicoder v2;
 
+import "./adapters/domain/OptionsModel.sol";
+
 library OptionsProtocolAdapter {
     function buyOptions(
         Options options,
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "buyOptions(address,address,uint256)",
-                optionAddress,
+                "buyOptions(uint256,address,uint256)",
+                optionID,
                 paymentTokenAddress,
                 amountToBuy
             )
@@ -22,14 +24,14 @@ library OptionsProtocolAdapter {
 
     function sellOptions(
         Options options,
-        address optionAddress,
+        uint256 optionID,
         address payoutTokenAddress,
         uint256 amountToSell
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "sellOptions(address,address,uint256)",
-                optionAddress,
+                "sellOptions(uint256,address,uint256)",
+                optionID,
                 payoutTokenAddress,
                 amountToSell
             )
@@ -39,14 +41,14 @@ library OptionsProtocolAdapter {
 
     function exerciseOptions(
         Options options,
-        address optionAddress,
+        uint256 optionID,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "exerciseOptions(address,uint256,address[])",
-                optionAddress,
+                "exerciseOptions(uint256,uint256, address[])",
+                optionID,
                 amountToExercise,
                 vaultOwners
             )
@@ -57,43 +59,55 @@ library OptionsProtocolAdapter {
     function getPutOptions(Options options)
         external
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature("getPutOptions()")
         );
         require(success, "OptionsAdapter: getPutOptions staticcall failed");
-        return abi.decode(result, (address[]));
+        return abi.decode(result, (OptionsModel.Option[]));
     }
 
     function getCallOptions(Options options)
         external
         view
-        returns (address[] memory)
+        returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature("getCallOptions()")
         );
         require(success, "OptionsAdapter: getCallOptions staticcall failed");
-        return abi.decode(result, (address[]));
+        return abi.decode(result, (OptionsModel.Option[]));
     }
 
     function getPrice(
         Options options,
-        address optionAddress,
+        uint256 optionID,
         address paymentTokenAddress,
         uint256 amountToBuy
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
-                "getPrice(address,address,uint256)",
-                optionAddress,
+                "getPrice(uint256,address,uint256)",
+                optionID,
                 paymentTokenAddress,
                 amountToBuy
             )
         );
         require(success, "OptionsAdapter: getPrice staticcall failed");
         return abi.decode(result, (uint256));
+    }
+
+    function options(Options options)
+        external
+        view
+        returns (OptionsModel.Option[] memory)
+    {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature("options()")
+        );
+        require(success, "OptionsAdapter: options staticcall failed");
+        return abi.decode(result, (OptionsModel.Option[]));
     }
 }
 
