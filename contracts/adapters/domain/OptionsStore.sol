@@ -3,77 +3,38 @@ pragma solidity ^0.7.5;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./OptionsModel.sol";
 
 contract OptionsStore {
     using SafeMath for uint256;
 
-    uint256 internal _currentOptionIndex = 0;
-    mapping(uint256 => Option) internal _options;
-    mapping(uint256 => address) internal _addressDetails;
-    mapping(uint256 => OptionAttributes) internal _attributeDetails;
+    uint256 public currentOptionIndex = 0;
+    mapping(uint256 => OptionsModel.Option) public options;
 
-    enum OptionStyle {ADDRESS, ATTRIBUTE}
-
-    enum OptionType {CALL, PUT}
-
-    enum OptionMarket {CONVEXITY, HEGIC}
-
-    struct OptionAttributes {
-        OptionType optionType;
-        uint256 strikePrice;
-        uint256 expiryDate;
-    }
-
-    struct Option {
-        //TODO: these values will always be the same for each pair so we dont need both
-        OptionStyle optionStyle;
-        OptionMarket optionMarket;
-    }
-
-    function _createAddressOption(
-        OptionMarket optionMarket,
-        address optionAddress
-    ) internal returns (uint256) {
-        _currentOptionIndex = _currentOptionIndex.add(1);
-
-        //clear any values if there are any (there shouldnt be)
-        delete (_options[_currentOptionIndex]);
-        delete (_addressDetails[_currentOptionIndex]);
-        delete (_attributeDetails[_currentOptionIndex]);
-
-        _options[_currentOptionIndex] = Option(
-            OptionStyle.ADDRESS,
-            optionMarket
-        );
-        _addressDetails[_currentOptionIndex] = optionAddress;
-
-        return _currentOptionIndex;
-    }
-
-    function _createAttributeOption(
-        OptionMarket optionMarket,
-        OptionType optionType,
+    function createOption(
+        OptionsModel.OptionMarket optionMarket,
+        OptionsModel.OptionType optionType,
         uint256 strikePrice,
-        uint256 expiryDate
-    ) internal returns (uint256) {
-        _currentOptionIndex = _currentOptionIndex++;
+        uint256 expiryDate,
+        address tokenAddress,
+        address settlementAsset,
+        address paymentAsset
+    ) public returns (uint256) {
+        currentOptionIndex = currentOptionIndex.add(1);
 
         //clear any values if there are any (there shouldnt be)
-        delete (_options[_currentOptionIndex]);
-        delete (_addressDetails[_currentOptionIndex]);
-        delete (_attributeDetails[_currentOptionIndex]);
+        delete (options[currentOptionIndex]);
 
-        _options[_currentOptionIndex] = Option(
-            OptionStyle.ATTRIBUTE,
-            optionMarket
-        );
-        OptionAttributes memory attributes = OptionAttributes(
+        options[currentOptionIndex] = OptionsModel.Option(
+            optionMarket,
             optionType,
             strikePrice,
-            expiryDate
+            expiryDate,
+            tokenAddress,
+            settlementAsset,
+            paymentAsset
         );
-        _attributeDetails[_currentOptionIndex] = attributes;
 
-        return _currentOptionIndex;
+        return currentOptionIndex;
     }
 }
