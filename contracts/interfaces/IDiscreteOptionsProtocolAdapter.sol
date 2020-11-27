@@ -11,16 +11,10 @@ import "../adapters/domain/OptionsModel.sol";
 /// @dev Every options protocol adapter MUST implement this interface
 interface IDiscreteOptionsProtocolAdapter is IOptionsProtocolAdapter {
     ///@notice Query and return available PUT options
-    function getPutOptions()
-        external
-        view
-        returns (OptionsModel.Option[] memory);
+    function getPutOptions() external returns (OptionsModel.Option[] memory);
 
     ///@notice Query and return available CALL options
-    function getCallOptions()
-        external
-        view
-        returns (OptionsModel.Option[] memory);
+    function getCallOptions() external returns (OptionsModel.Option[] memory);
 
     ///@notice Sell a given PUT or CALL option
     function sellOptions(

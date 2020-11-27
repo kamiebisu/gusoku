@@ -23,7 +23,6 @@ contract OptionsWarchest {
 
     function getPutOptions(Options optionsProtocol)
         public
-        view
         returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getPutOptions();
@@ -31,7 +30,6 @@ contract OptionsWarchest {
 
     function getCallOptions(Options optionsProtocol)
         public
-        view
         returns (OptionsModel.Option[] memory)
     {
         return optionsProtocol.getCallOptions();
