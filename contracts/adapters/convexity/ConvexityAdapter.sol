@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../interfaces/IDiscreteOptionsProtocolAdapter.sol";
 import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IOptionsExchange.sol";
@@ -35,12 +36,28 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
         uint256 currentOptionIndex = this.currentOptionIndex();
         if (numOptionsContracts != currentOptionIndex) {
             for (uint256 i = currentOptionIndex; i < numOptionsContracts; i++) {
+                // Get the oToken contract
                 address oTokenAddress = _optionsFactory.optionsContracts(i);
                 IoToken oToken = IoToken(oTokenAddress);
+
+                // Differentiate between PUT and CALL options
                 bool isPut = oToken.name().toSlice().contains("Put".toSlice());
+
+                // Get the option strikePrice, handling negative exponents by considering
+                // the number of decimals of the strikeAsset
                 (uint256 value, int32 exponent) = oToken.strikePrice();
-                // TODO: Fix exponentiation power is not allowed to be a signed integer type
-                uint256 strikePrice = value * uint256(uint32(10)**exponent);
+                address strikeAddress = oToken.strike();
+                uint8 decimals;
+                if (strikeAddress == address(0)) {
+                    // strike is ETH
+                    decimals = 18;
+                } else {
+                    ERC20 strikeAsset = ERC20(oToken.strike());
+                    decimals = strikeAsset.decimals();
+                }
+                uint256 strikePrice = value * 10**uint256(exponent + decimals);
+
+                // Create an Option struct and save it to the OptionsStore
                 createOption(
                     OptionsModel.OptionMarket.CONVEXITY,
                     isPut
@@ -49,7 +66,7 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
                     strikePrice,
                     oToken.expiry(),
                     oTokenAddress,
-                    oToken.strike(),
+                    strikeAddress,
                     address(0) // Default to ETH for now
                 );
             }
