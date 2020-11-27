@@ -58,6 +58,7 @@ library OptionsProtocolAdapter {
 
     function getPutOptions(Options options)
         external
+        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
@@ -69,6 +70,7 @@ library OptionsProtocolAdapter {
 
     function getCallOptions(Options options)
         external
+        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(

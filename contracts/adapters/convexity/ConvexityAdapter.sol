@@ -107,6 +107,7 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
 
     function getPutOptions()
         external
+        view
         override
         returns (OptionsModel.Option[] memory)
     {
@@ -115,6 +116,7 @@ contract ConvexityAdapter is IDiscreteOptionsProtocolAdapter, OptionsStore {
 
     function getCallOptions()
         external
+        view
         override
         returns (OptionsModel.Option[] memory)
     {
