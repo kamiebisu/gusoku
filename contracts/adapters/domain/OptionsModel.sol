@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 library OptionsModel {
-    enum OptionMarket {CONVEXITY, HEGIC}
+    enum OptionMarket {CONVEXITY, HEGIC, MOCKSERVICE}
 
     enum OptionType {CALL, PUT}
 
