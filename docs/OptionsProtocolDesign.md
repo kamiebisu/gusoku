@@ -9,9 +9,9 @@ The options model attempts to model the attributes of an option in a standardise
 First, we define an OptionType:
 
     enum OptionType {CALL, PUT}
-    
-Next, we define OptionMarket which refers to the 
-    
+
+Next, we define OptionMarket which refers to the
+
     enum OptionMarket {CONVEXITY, HEGIC, MOCKSERVICE}
 
 PROPOSAL: Actually, in the interest of upgradeability, I'm thinking we can model the above as an address instead. This way, if any new protocols are added once the contracts are deployed, it will be a matter of changing a config somewhere to support new protocols... I'll create a separate ticket for this though...
@@ -35,6 +35,7 @@ Consumers of this Option type can treat each Option as a generic object without 
 #### IOptionsProtocol
 
 This is the base interface that all options should inherit regardless of their functionality. It provides the minimum feature set that any options protocol should have:
+
 - getBuyPrice
 - buyOptions
 - exerciseOptions
@@ -46,10 +47,12 @@ For protocols that are pool based and provide a no-slippage market maker e.g. HE
 #### IDiscreteOptionsProtocol
 
 There are two types of options markets:
+
 - Continuous market: An AMM which quotes a price based on features of the option (Option type, Strike price, Expiry). Since these parameters can be supplied at will, there is a near infinite amount of permutations.
 - Discrete market: A rigid set of {Option type + Strike price + Expiry} combinations which can be selected from. This set can change but it is not malleable in the way it is with an AMM.
 
 The DiscreteOptionsProtocol interface is to be implemented by protocols which have a set amount of options to buy from. It provides two methods to be implemented:
+
 - getPutOptions(baseAsset)
 - getCallOptions(baseAsset)
 
@@ -58,11 +61,10 @@ These should return an exhaustive set of **non-expired** options.
 #### ResellableOptionsProtocol
 
 Some protocols allow options to be resold to a pool rather than exercised. The ResellableOptionsProtocol interface is to be implemented by these protocols. It provides the following methods:
+
 - getSellPrice
 - sellOptions
 - getAvailableSellLiquidity
 - getAvailableSellLiquidityAtPrice
 
 These methods are synonymous to the buy related methods in IOptionsProtocol, but for selling.
-
-

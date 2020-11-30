@@ -6,7 +6,7 @@
 
 The reason for this change is to get rid of the optionID which makes things a bit more complex, we can just use the option itself which is now self descriptive (since there's now only a generic option rather than address/attribute options now).
 
-The alternative is to build an array of options and then add AMM options we are interested in. Then we pass both the array and the index and the implemented method will fetch it from the array. This means passing 2 params per method rather than one and there will be duplication of the fetch from array in each implementation. I dont see any reason to have the whole array  of options (or OptionsStore) in the method as its not needed unless there are objections to this approach?
+The alternative is to build an array of options and then add AMM options we are interested in. Then we pass both the array and the index and the implemented method will fetch it from the array. This means passing 2 params per method rather than one and there will be duplication of the fetch from array in each implementation. I dont see any reason to have the whole array of options (or OptionsStore) in the method as its not needed unless there are objections to this approach?
 
 **2. New methods and interfaces.**
 
@@ -41,7 +41,7 @@ function getSmartPrice(IOptionsProtocol[] protocols, uint256 desiredOptions) ret
 }
 ```
 
-If we want to get even more granular with the interfaces, we can move ```getAvailableBuyLiquidityAtPrice``` and ```getAvailableSellLiquidityAtPrice``` to IVariablePriceOptionsProtocol and IVariablePriceResellableOptionsProtocol respectively. This is because for constant price AMMs like Hegic, these methods will do the same thing.
+If we want to get even more granular with the interfaces, we can move `getAvailableBuyLiquidityAtPrice` and `getAvailableSellLiquidityAtPrice` to IVariablePriceOptionsProtocol and IVariablePriceResellableOptionsProtocol respectively. This is because for constant price AMMs like Hegic, these methods will do the same thing.
 
 **3. Introduction of OwnedOptionsStore**
 
