@@ -10,12 +10,14 @@ import "../../interfaces/IResellableOptionsProtocol.sol";
 import "./interfaces/IOptionsFactory.sol";
 import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
+import "./interfaces/IUniswapV1Factory.sol";
+import "./interfaces/IUniswapV1Exchange.sol";
 import "../../libraries/strings.sol";
 import "../domain/OptionsStore.sol";
 import "../domain/OptionsModel.sol";
 
 contract ConvexityAdapter is
-    IDiscreteOptionsProtocolAdapter,
+    IDiscreteOptionsProtocol,
     IResellableOptionsProtocol
 {
     using SafeMath for uint256;
@@ -23,6 +25,7 @@ contract ConvexityAdapter is
 
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
+    IUniswapV1Factory private immutable _uniswapV1Factory;
 
     constructor() {
         _optionsFactory = IOptionsFactory(
@@ -30,6 +33,9 @@ contract ConvexityAdapter is
         );
         _optionsExchange = IOptionsExchange(
             0x39246c4F3F6592C974EBC44F80bA6dC69b817c71
+        );
+        _uniswapV1Factory = IUniswapV1Factory(
+            0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95
         );
     }
 
@@ -66,7 +72,7 @@ contract ConvexityAdapter is
         uint256 numFilteredOptions = 0;
         for (uint256 i = 0; i < numOptionsContracts; i++) {
             address oTokenAddress = _optionsFactory.optionsContracts(i);
-            oToken = IoToken(oTokenAddress);
+            IoToken oToken = IoToken(oTokenAddress);
             string memory filter = _optionType == OptionsModel.OptionType.PUT
                 ? "Put"
                 : "Call";
@@ -124,25 +130,65 @@ contract ConvexityAdapter is
         return _getFilteredOptions(OptionsModel.OptionType.CALL, baseAsset);
     }
 
-    function getPrice(
-        uint256 optionID,
+    function getAvailableBuyLiquidity(OptionsModel.Option memory option)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        IoToken optionToken = IoToken(option.tokenAddress);
+        return
+            optionToken.balanceOf(
+                _uniswapV1Factory.getExchange(option.tokenAddress)
+            ) / 10**optionToken.decimals();
+    }
+
+    function getAvailableBuyLiquidityAtPrice(
+        OptionsModel.Option memory option,
+        uint256 maxPriceToPay,
+        address paymentTokenAddress
+    ) external view override returns (uint256) {
+        // Payment token is ETH
+        if (paymentTokenAddress == address(0)) {
+            IoToken optionToken = IoToken(option.tokenAddress);
+            IUniswapV1Exchange exchange = IUniswapV1Exchange(
+                _uniswapV1Factory.getExchange(option.tokenAddress)
+            );
+            return exchange.getEthToTokenInputPrice(maxPriceToPay);
+        }
+
+        // Payment token is some ERC20
+        uint256 oTokensToBuy = 1;
+        while (
+            _optionsExchange.premiumToPay(
+                option.tokenAddress,
+                paymentTokenAddress,
+                oTokensToBuy
+            ) <= maxPriceToPay
+        ) {
+            oTokensToBuy.add(1);
+        }
+        return oTokensToBuy;
+    }
+
+    function getBuyPrice(
+        OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         return
             _optionsExchange.premiumToPay(
-                options[optionID].tokenAddress,
+                option.tokenAddress,
                 paymentTokenAddress,
                 amountToBuy
             );
     }
 
     function buyOptions(
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external payable override {
-        address optionAddress = options[optionID].tokenAddress;
         // Need to approve any ERC20 before spending it
         IERC20 paymentToken = IERC20(paymentTokenAddress);
         if (
@@ -150,54 +196,32 @@ contract ConvexityAdapter is
             paymentToken.allowance(address(this), address(_optionsExchange)) !=
             type(uint256).max
         ) {
+            paymentToken.approve(address(_optionsExchange), 0);
             paymentToken.approve(address(_optionsExchange), type(uint256).max);
         }
 
         _optionsExchange.buyOTokens(
             address(this),
-            optionAddress,
+            option.tokenAddress,
             paymentTokenAddress,
             amountToBuy
         );
     }
 
-    function sellOptions(
-        uint256 optionID,
-        uint256 amountToSell,
-        address payoutTokenAddress
-    ) external override {
-        address optionAddress = options[optionID].tokenAddress;
-        // Need to approve the oToken before spending it
-        IoToken optionToken = IoToken(optionAddress);
-        if (
-            optionToken.allowance(address(this), address(_optionsExchange)) !=
-            type(uint256).max
-        ) {
-            optionToken.approve(address(_optionsExchange), type(uint256).max);
-        }
-
-        _optionsExchange.sellOTokens(
-            address(this),
-            optionAddress,
-            payoutTokenAddress,
-            amountToSell
-        );
-    }
-
     function exerciseOptions(
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable override {
-        address optionAddress = options[optionID].tokenAddress;
-        IoToken optionToken = IoToken(optionAddress);
+        IoToken optionToken = IoToken(option.tokenAddress);
 
         // Approve the oToken contract to transfer the caller's optionToken balance
         if (
-            optionToken.allowance(address(this), optionAddress) !=
+            optionToken.allowance(address(this), option.tokenAddress) !=
             type(uint256).max
         ) {
-            optionToken.approve(optionAddress, type(uint256).max);
+            optionToken.approve(option.tokenAddress, 0);
+            optionToken.approve(option.tokenAddress, type(uint256).max);
         }
 
         address underlyingAddress = optionToken.underlying();
@@ -206,10 +230,11 @@ contract ConvexityAdapter is
         // Approve the oToken contract to transfer the caller's underlyingToken balance
         if (
             underlyingAddress != address(0) &&
-            underlyingToken.allowance(address(this), optionAddress) !=
+            underlyingToken.allowance(address(this), option.tokenAddress) !=
             type(uint256).max
         ) {
-            underlyingToken.approve(optionAddress, type(uint256).max);
+            underlyingToken.approve(option.tokenAddress, 0);
+            underlyingToken.approve(option.tokenAddress, type(uint256).max);
         }
 
         uint256 underlyingAmountRequired = optionToken
