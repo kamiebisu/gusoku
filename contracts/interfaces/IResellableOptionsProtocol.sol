@@ -17,13 +17,13 @@ interface IResellableOptionsProtocol is IOptionsProtocol {
         address payoutTokenAddress
     ) external;
 
-    //@notice Get available amount to sell for a certain baseAsset
+    ///@notice Get available amount to sell for a certain baseAsset
     function getAvailableSellLiquidity(OptionsModel.Option memory option)
         external
         view
         returns (uint256);
 
-    //@notice Get amount of options available to sell at a certain price or higher
+    ///@notice Get amount of options available to sell at a certain price or higher
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
         uint256 minPriceToSellAt,
