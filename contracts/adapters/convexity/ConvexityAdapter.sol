@@ -3,6 +3,7 @@ pragma solidity ^0.7.5;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../interfaces/IDiscreteOptionsProtocol.sol";
@@ -21,6 +22,7 @@ contract ConvexityAdapter is
     IResellableOptionsProtocol
 {
     using SafeMath for uint256;
+    using SignedSafeMath for int256;
     using strings for *;
 
     IOptionsFactory private immutable _optionsFactory;
@@ -40,23 +42,42 @@ contract ConvexityAdapter is
     }
 
     ///@notice Get the option strikePrice
-    ///@dev Handles negative exponents by considering the number of decimals of the strikeAsset
+    ///@dev Handles negative exponents by considering oToken.decimals() and strike.decimals()
     function _getStrikePrice(IoToken oToken)
         internal
         view
         returns (uint256 strikePrice)
     {
         (uint256 value, int32 exponent) = oToken.strikePrice();
-        address strikeAddress = oToken.strike();
-        uint8 decimals;
-        if (strikeAddress == address(0)) {
-            // strike is ETH
-            decimals = 18;
+
+        uint8 strikeDecimals;
+        if (oToken.strike() != address(0)) {
+            ERC20 strike = ERC20(oToken.strike());
+            strikeDecimals = strike.decimals();
         } else {
-            ERC20 strikeAsset = ERC20(oToken.strike());
-            decimals = strikeAsset.decimals();
+            // strike is ETH
+            strikeDecimals = 18;
         }
-        strikePrice = value * 10**uint256(exponent + decimals);
+
+        if (oToken.optionType == OptionsModel.OptionType.PUT) {
+            strikePrice = value.mul(
+                10 **
+                    uint256(
+                        int256(exponent).add(oToken.decimals()).add(
+                            strikeDecimals
+                        )
+                    )
+            );
+        } else {
+            // oToken is a CALL option
+            strikePrice = (10 **
+                uint256(
+                    int256(exponent).mul(-1).sub(oToken.decimals()).add(
+                        strikeDecimals
+                    )
+                ))
+                .div(value);
+        }
     }
 
     function _getFilteredOptions(
