@@ -151,17 +151,27 @@ contract ConvexityAdapter is
         return _getFilteredOptions(OptionsModel.OptionType.CALL, baseAsset);
     }
 
-    function getAvailableBuyLiquidity(OptionsModel.Option memory option)
-        external
+    function _getAvailableLiquidity(OptionsModel.Option memory option)
+        internal
         view
-        override
         returns (uint256)
     {
         IoToken optionToken = IoToken(option.tokenAddress);
         return
             optionToken.balanceOf(
                 _uniswapV1Factory.getExchange(option.tokenAddress)
-            ) / 10**optionToken.decimals();
+                // subtract 1 since trying to get/use all the liquidity
+                // would raise a 'invalid jump destination' error
+            ) - 1;
+    }
+
+    function getAvailableBuyLiquidity(OptionsModel.Option memory option)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return _getAvailableLiquidity(option);
     }
 
     function getAvailableBuyLiquidityAtPrice(
@@ -171,7 +181,6 @@ contract ConvexityAdapter is
     ) external view override returns (uint256) {
         // Payment token is ETH
         if (paymentTokenAddress == address(0)) {
-            IoToken optionToken = IoToken(option.tokenAddress);
             IUniswapV1Exchange exchange = IUniswapV1Exchange(
                 _uniswapV1Factory.getExchange(option.tokenAddress)
             );
@@ -280,5 +289,77 @@ contract ConvexityAdapter is
         }
 
         optionToken.exercise{value: msg.value}(amountToExercise, vaultOwners);
+    }
+
+    function sellOptions(
+        OptionsModel.Option memory option,
+        uint256 amountToSell,
+        address payoutTokenAddress
+    ) external override {
+        IoToken optionToken = IoToken(option.tokenAddress);
+        if (
+            optionToken.allowance(address(this), address(_optionsExchange)) !=
+            type(uint256).max
+        ) {
+            optionToken.approve(address(_optionsExchange), 0);
+            optionToken.approve(address(_optionsExchange), type(uint256).max);
+        }
+
+        _optionsExchange.sellOTokens(
+            address(this),
+            option.tokenAddress,
+            payoutTokenAddress,
+            amountToSell
+        );
+    }
+
+    function getAvailableSellLiquidity(OptionsModel.Option memory option)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return _getAvailableLiquidity(option);
+    }
+
+    function getAvailableSellLiquidityAtPrice(
+        OptionsModel.Option memory option,
+        uint256 minPriceToSellAt,
+        address payoutTokenAddress
+    ) external view override returns (uint256) {
+        // Payout token is ETH
+        if (payoutTokenAddress == address(0)) {
+            IUniswapV1Exchange exchange = IUniswapV1Exchange(
+                _uniswapV1Factory.getExchange(option.tokenAddress)
+            );
+            return exchange.getTokenToEthInputPrice(minPriceToSellAt);
+        }
+
+        // Payout token is some ERC20
+        IoToken oToken = IoToken(option.tokenAddress);
+        uint256 oTokensToSell = oToken.balanceOf(address(this));
+        while (
+            _optionsExchange.premiumReceived(
+                option.tokenAddress,
+                payoutTokenAddress,
+                oTokensToSell
+            ) >= minPriceToSellAt
+        ) {
+            oTokensToSell.sub(1);
+        }
+        return oTokensToSell;
+    }
+
+    function getSellPrice(
+        OptionsModel.Option memory option,
+        uint256 amountToSell,
+        address payoutTokenAddress
+    ) external view override returns (uint256) {
+        return
+            _optionsExchange.premiumReceived(
+                option.tokenAddress,
+                payoutTokenAddress,
+                amountToSell
+            );
     }
 }

@@ -27,13 +27,13 @@ interface IResellableOptionsProtocol is IOptionsProtocol {
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
         uint256 minPriceToSellAt,
-        address paymentTokenAddress
+        address payoutTokenAddress
     ) external view returns (uint256);
 
     ///@notice Get sell price for a given PUT or CALL option
     function getSellPrice(
         OptionsModel.Option memory option,
         uint256 amountToSell,
-        address paymentTokenAddress
+        address payoutTokenAddress
     ) external view returns (uint256);
 }
