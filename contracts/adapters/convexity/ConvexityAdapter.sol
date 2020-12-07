@@ -26,7 +26,6 @@ contract ConvexityAdapter is
     using SignedSafeMath for int256;
     using strings for *;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IoToken;
 
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
@@ -269,8 +268,11 @@ contract ConvexityAdapter is
         }
 
         // Approve the oToken contract to spend amountToExercise from the caller's balance
-        optionToken.safeApprove(option.tokenAddress, 0);
-        optionToken.safeApprove(option.tokenAddress, amountToExercise);
+        IERC20(option.tokenAddress).safeApprove(option.tokenAddress, 0);
+        IERC20(option.tokenAddress).safeApprove(
+            option.tokenAddress,
+            amountToExercise
+        );
 
         // Approve the oToken contract to spend the caller's underlyingToken balance
         if (underlyingAddress != address(0)) {
@@ -289,10 +291,11 @@ contract ConvexityAdapter is
         uint256 amountToSell,
         address payoutTokenAddress
     ) external override {
-        IoToken optionToken = IoToken(option.tokenAddress);
-
-        optionToken.safeApprove(address(_optionsExchange), 0);
-        optionToken.safeApprove(address(_optionsExchange), amountToSell);
+        IERC20(option.tokenAddress).safeApprove(address(_optionsExchange), 0);
+        IERC20(option.tokenAddress).safeApprove(
+            address(_optionsExchange),
+            amountToSell
+        );
 
         _optionsExchange.sellOTokens(
             address(this),
