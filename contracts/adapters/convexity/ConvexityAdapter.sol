@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../interfaces/IDiscreteOptionsProtocol.sol";
 import "../../interfaces/IResellableOptionsProtocol.sol";
 import "./interfaces/IOptionsFactory.sol";
@@ -24,6 +25,8 @@ contract ConvexityAdapter is
     using SafeMath for uint256;
     using SignedSafeMath for int256;
     using strings for *;
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IoToken;
 
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
@@ -221,13 +224,9 @@ contract ConvexityAdapter is
     ) external payable override {
         // Need to approve any ERC20 before spending it
         IERC20 paymentToken = IERC20(paymentTokenAddress);
-        if (
-            paymentTokenAddress != address(0) &&
-            paymentToken.allowance(address(this), address(_optionsExchange)) !=
-            type(uint256).max
-        ) {
-            paymentToken.approve(address(_optionsExchange), 0);
-            paymentToken.approve(address(_optionsExchange), type(uint256).max);
+        if (paymentTokenAddress != address(0)) {
+            paymentToken.safeApprove(address(_optionsExchange), 0);
+            paymentToken.safeApprove(address(_optionsExchange), amountToBuy);
         }
 
         _optionsExchange.buyOTokens(
@@ -245,31 +244,12 @@ contract ConvexityAdapter is
     ) external payable override {
         IoToken optionToken = IoToken(option.tokenAddress);
 
-        // Approve the oToken contract to transfer the caller's optionToken balance
-        if (
-            optionToken.allowance(address(this), option.tokenAddress) !=
-            type(uint256).max
-        ) {
-            optionToken.approve(option.tokenAddress, 0);
-            optionToken.approve(option.tokenAddress, type(uint256).max);
-        }
-
         address underlyingAddress = optionToken.underlying();
         IERC20 underlyingToken = IERC20(underlyingAddress);
-
-        // Approve the oToken contract to transfer the caller's underlyingToken balance
-        if (
-            underlyingAddress != address(0) &&
-            underlyingToken.allowance(address(this), option.tokenAddress) !=
-            type(uint256).max
-        ) {
-            underlyingToken.approve(option.tokenAddress, 0);
-            underlyingToken.approve(option.tokenAddress, type(uint256).max);
-        }
-
         uint256 underlyingAmountRequired = optionToken
             .underlyingRequiredToExercise(amountToExercise);
 
+        // Perform checks required for the exercising of options to succeed
         require(
             optionToken.isExerciseWindow() == true,
             "ConvexityAdapter: can only exercise during the exericse window"
@@ -288,6 +268,19 @@ contract ConvexityAdapter is
             );
         }
 
+        // Approve the oToken contract to spend amountToExercise from the caller's balance
+        optionToken.safeApprove(option.tokenAddress, 0);
+        optionToken.safeApprove(option.tokenAddress, amountToExercise);
+
+        // Approve the oToken contract to spend the caller's underlyingToken balance
+        if (underlyingAddress != address(0)) {
+            underlyingToken.safeApprove(option.tokenAddress, 0);
+            underlyingToken.safeApprove(
+                option.tokenAddress,
+                underlyingAmountRequired
+            );
+        }
+
         optionToken.exercise{value: msg.value}(amountToExercise, vaultOwners);
     }
 
@@ -297,13 +290,9 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external override {
         IoToken optionToken = IoToken(option.tokenAddress);
-        if (
-            optionToken.allowance(address(this), address(_optionsExchange)) !=
-            type(uint256).max
-        ) {
-            optionToken.approve(address(_optionsExchange), 0);
-            optionToken.approve(address(_optionsExchange), type(uint256).max);
-        }
+
+        optionToken.safepprove(address(_optionsExchange), 0);
+        optionToken.safeApprove(address(_optionsExchange), amountToSell);
 
         _optionsExchange.sellOTokens(
             address(this),
