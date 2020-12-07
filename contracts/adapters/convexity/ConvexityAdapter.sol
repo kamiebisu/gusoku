@@ -46,7 +46,7 @@ contract ConvexityAdapter is
 
     ///@notice Get the option strikePrice
     ///@dev Handles negative exponents by considering oToken.decimals() and strike.decimals()
-    function _getStrikePrice(IoToken oToken)
+    function _getStrikePrice(IoToken oToken, OptionsModel.OptionType optionType)
         internal
         view
         returns (uint256 strikePrice)
@@ -62,7 +62,7 @@ contract ConvexityAdapter is
             strikeDecimals = 18;
         }
 
-        if (oToken.optionType == OptionsModel.OptionType.PUT) {
+        if (optionType == OptionsModel.OptionType.PUT) {
             strikePrice = value.mul(
                 10 **
                     uint256(
@@ -113,7 +113,7 @@ contract ConvexityAdapter is
                 currentOptions[numFilteredOptions] = OptionsModel.Option({
                     optionMarket: OptionsModel.OptionMarket.CONVEXITY,
                     optionType: _optionType,
-                    strikePrice: _getStrikePrice(oToken),
+                    strikePrice: _getStrikePrice(oToken, _optionType),
                     expiryDate: oToken.expiry(),
                     tokenAddress: oTokenAddress,
                     settlementAsset: oToken.strike(),
@@ -291,7 +291,7 @@ contract ConvexityAdapter is
     ) external override {
         IoToken optionToken = IoToken(option.tokenAddress);
 
-        optionToken.safepprove(address(_optionsExchange), 0);
+        optionToken.safeApprove(address(_optionsExchange), 0);
         optionToken.safeApprove(address(_optionsExchange), amountToSell);
 
         _optionsExchange.sellOTokens(
