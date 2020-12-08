@@ -27,6 +27,7 @@ contract MockServiceAdapterV2 is
 
     function getPutOptions(address baseAsset)
         external
+        view
         override
         returns (OptionsModel.Option[] memory)
     {
@@ -48,6 +49,7 @@ contract MockServiceAdapterV2 is
 
     function getCallOptions(address baseAsset)
         external
+        view
         override
         returns (OptionsModel.Option[] memory)
     {
