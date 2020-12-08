@@ -7,14 +7,14 @@ import "./adapters/domain/OptionsModel.sol";
 library OptionsProtocolAdapter {
     function buyOptions(
         Options options,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "buyOptions(uint256,uint256,address)",
-                optionID,
+                "buyOptions(OptionsModel.Option,uint256,address)",
+                option,
                 paymentTokenAddress,
                 amountToBuy
             )
@@ -24,14 +24,14 @@ library OptionsProtocolAdapter {
 
     function sellOptions(
         Options options,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToSell,
         address payoutTokenAddress
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "sellOptions(uint256,uint256,address)",
-                optionID,
+                "sellOptions(OptionsModel.Option,uint256,address)",
+                option,
                 amountToSell,
                 payoutTokenAddress
             )
@@ -41,14 +41,14 @@ library OptionsProtocolAdapter {
 
     function exerciseOptions(
         Options options,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external {
         (bool success, ) = address(options).delegatecall(
             abi.encodeWithSignature(
-                "exerciseOptions(uint256,uint256, address[])",
-                optionID,
+                "exerciseOptions(OptionsModel.Option,uint256, address[])",
+                option,
                 amountToExercise,
                 vaultOwners
             )
@@ -58,7 +58,6 @@ library OptionsProtocolAdapter {
 
     function getPutOptions(Options options)
         external
-        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
@@ -70,7 +69,6 @@ library OptionsProtocolAdapter {
 
     function getCallOptions(Options options)
         external
-        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
@@ -82,14 +80,14 @@ library OptionsProtocolAdapter {
 
     function getPrice(
         Options options,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
-                "getPrice(uint256,uint256,address)",
-                optionID,
+                "getPrice(OptionsModel.Option,uint256,address)",
+                option,
                 paymentTokenAddress,
                 amountToBuy
             )
