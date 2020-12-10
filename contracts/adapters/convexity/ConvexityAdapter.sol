@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "../../interfaces/IDiscreteOptionsProtocol.sol";
 import "../../interfaces/IResellableOptionsProtocol.sol";
 import "./interfaces/IOptionsFactory.sol";
@@ -26,12 +27,18 @@ contract ConvexityAdapter is
     using SignedSafeMath for int256;
     using strings for *;
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
     IUniswapV1Factory private immutable _uniswapV1Factory;
 
-    constructor() {
+    // Tokens that can be used as paymentToken and payoutToken throughout Opyn V1
+    // Trying to call functions with tokens not in this set would revert with:
+    // "execution reverted: No payout exchange"
+    EnumerableSet.AddressSet private _supportedExchangeTokens;
+
+    constructor(address[] memory supportedTokens) {
         _optionsFactory = IOptionsFactory(
             0xcC5d905b9c2c8C9329Eb4e25dc086369D6C7777C
         );
@@ -41,6 +48,10 @@ contract ConvexityAdapter is
         _uniswapV1Factory = IUniswapV1Factory(
             0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95
         );
+
+        for (uint8 i = 0; i < supportedTokens.length; i++) {
+            _supportedExchangeTokens.add(supportedTokens[i]);
+        }
     }
 
     ///@notice Get the option strikePrice
@@ -181,6 +192,11 @@ contract ConvexityAdapter is
         uint256 maxPriceToPay,
         address paymentTokenAddress
     ) external view override returns (uint256) {
+        require(
+            _supportedExchangeTokens.contains(paymentTokenAddress),
+            "ConvexityAdapter.getAvailableBuyLiquidityAtPrice: paymentTokenAddress is not supported"
+        );
+
         // Payment token is ETH
         if (paymentTokenAddress == address(0)) {
             IUniswapV1Exchange exchange = IUniswapV1Exchange(
@@ -208,6 +224,11 @@ contract ConvexityAdapter is
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external view override returns (uint256) {
+        require(
+            _supportedExchangeTokens.contains(paymentTokenAddress),
+            "ConvexityAdapter.getBuyPrice: paymentTokenAddress is not supported"
+        );
+
         return
             _optionsExchange.premiumToPay(
                 option.tokenAddress,
@@ -221,6 +242,11 @@ contract ConvexityAdapter is
         uint256 amountToBuy,
         address paymentTokenAddress
     ) external payable override {
+        require(
+            _supportedExchangeTokens.contains(paymentTokenAddress),
+            "ConvexityAdapter.buyOptions: paymentTokenAddress is not supported"
+        );
+
         // Need to approve any ERC20 before spending it
         IERC20 paymentToken = IERC20(paymentTokenAddress);
         if (paymentTokenAddress != address(0)) {
@@ -291,6 +317,11 @@ contract ConvexityAdapter is
         uint256 amountToSell,
         address payoutTokenAddress
     ) external override {
+        require(
+            _supportedExchangeTokens.contains(payoutTokenAddress),
+            "ConvexityAdapter.sellOptions: payoutTokenAddress is not supported"
+        );
+
         IERC20(option.tokenAddress).safeApprove(address(_optionsExchange), 0);
         IERC20(option.tokenAddress).safeApprove(
             address(_optionsExchange),
@@ -319,6 +350,11 @@ contract ConvexityAdapter is
         uint256 minPriceToSellAt,
         address payoutTokenAddress
     ) external view override returns (uint256) {
+        require(
+            _supportedExchangeTokens.contains(payoutTokenAddress),
+            "ConvexityAdapter.getAvailableSellLiquidityAtPrice: payoutTokenAddress is not supported"
+        );
+
         // Payout token is ETH
         if (payoutTokenAddress == address(0)) {
             IUniswapV1Exchange exchange = IUniswapV1Exchange(
@@ -347,6 +383,11 @@ contract ConvexityAdapter is
         uint256 amountToSell,
         address payoutTokenAddress
     ) external view override returns (uint256) {
+        require(
+            _supportedExchangeTokens.contains(payoutTokenAddress),
+            "ConvexityAdapter.getSellPrice: payoutTokenAddress is not supported"
+        );
+
         return
             _optionsExchange.premiumReceived(
                 option.tokenAddress,
