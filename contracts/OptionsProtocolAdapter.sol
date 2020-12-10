@@ -19,7 +19,10 @@ library OptionsProtocolAdapter {
                 amountToBuy
             )
         );
-        require(success, "OptionsAdapter: buyOptions delegatecall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: buyOptions delegatecall failed"
+        );
     }
 
     function sellOptions(
@@ -36,7 +39,10 @@ library OptionsProtocolAdapter {
                 payoutTokenAddress
             )
         );
-        require(success, "OptionsAdapter: sellOptions delegatecall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: sellOptions delegatecall failed"
+        );
     }
 
     function exerciseOptions(
@@ -53,32 +59,81 @@ library OptionsProtocolAdapter {
                 vaultOwners
             )
         );
-        require(success, "OptionsAdapter: exerciseOptions delegatecall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: exerciseOptions delegatecall failed"
+        );
     }
 
-    function getPutOptions(Options options)
+    function getPutOptions(Options options, address baseAsset)
         external
+        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
-            abi.encodeWithSignature("getPutOptions()")
+            abi.encodeWithSignature("getPutOptions(address)", baseAsset)
         );
-        require(success, "OptionsAdapter: getPutOptions staticcall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: getPutOptions staticcall failed"
+        );
         return abi.decode(result, (OptionsModel.Option[]));
     }
 
-    function getCallOptions(Options options)
+    function getCallOptions(Options options, address baseAsset)
         external
+        view
         returns (OptionsModel.Option[] memory)
     {
         (bool success, bytes memory result) = address(options).staticcall(
-            abi.encodeWithSignature("getCallOptions()")
+            abi.encodeWithSignature("getCallOptions(address)", baseAsset)
         );
-        require(success, "OptionsAdapter: getCallOptions staticcall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: getCallOptions staticcall failed"
+        );
         return abi.decode(result, (OptionsModel.Option[]));
     }
 
-    function getPrice(
+    function getAvailableBuyLiquidity(
+        Options options,
+        OptionsModel.Option memory option
+    ) external view returns (uint256) {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature(
+                "getAvailableBuyLiquidity(OptionsModel.Option)",
+                option
+            )
+        );
+        require(
+            success,
+            "OptionsProtocolAdapter: getAvailableBuyLiquidity staticcall failed"
+        );
+        return abi.decode(result, (uint256));
+    }
+
+    function getAvailableBuyLiquidityAtPrice(
+        Options options,
+        OptionsModel.Option memory option,
+        uint256 maxPriceToPay,
+        address paymentTokenAddress
+    ) external view returns (uint256) {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature(
+                "getAvailableBuyLiquidityAtPrice(OptionsModel.Option,uint256,address)",
+                option,
+                maxPriceToPay,
+                paymentTokenAddress
+            )
+        );
+        require(
+            success,
+            "OptionsProtocolAdapter: getAvailableBuyLiquidityAtPrice staticcall failed"
+        );
+        return abi.decode(result, (uint256));
+    }
+
+    function getBuyPrice(
         Options options,
         OptionsModel.Option memory option,
         uint256 amountToBuy,
@@ -86,26 +141,76 @@ library OptionsProtocolAdapter {
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
-                "getPrice(OptionsModel.Option,uint256,address)",
+                "getBuyPrice(OptionsModel.Option,uint256,address)",
                 option,
-                paymentTokenAddress,
-                amountToBuy
+                amountToBuy,
+                paymentTokenAddress
             )
         );
-        require(success, "OptionsAdapter: getPrice staticcall failed");
+        require(
+            success,
+            "OptionsProtocolAdapter: getBuyPrice staticcall failed"
+        );
         return abi.decode(result, (uint256));
     }
 
-    function options(Options options, uint256 optionID)
-        external
-        view
-        returns (OptionsModel.Option memory)
-    {
+    function getAvailableSellLiquidity(
+        Options options,
+        OptionsModel.Option memory option
+    ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
-            abi.encodeWithSignature("options(uint256)", optionID)
+            abi.encodeWithSignature(
+                "getAvailableSellLiquidity(OptionsModel.Option)",
+                option
+            )
         );
-        require(success, "OptionsAdapter: options staticcall failed");
-        return abi.decode(result, (OptionsModel.Option));
+        require(
+            success,
+            "OptionsProtocolAdapter: getAvailableSellLiquidity staticcall failed"
+        );
+        return abi.decode(result, (uint256));
+    }
+
+    function getAvailableSellLiquidityAtPrice(
+        Options options,
+        OptionsModel.Option memory option,
+        uint256 minPriceToSellAt,
+        address payoutTokenAddress
+    ) external view returns (uint256) {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature(
+                "getAvailableSellLiquidityAtPrice(OptionsModel.Option,uint256,address)",
+                option,
+                minPriceToSellAt,
+                payoutTokenAddress
+            )
+        );
+        require(
+            success,
+            "OptionsProtocolAdapter: getAvailableSellLiquidityAtPrice staticcall failed"
+        );
+        return abi.decode(result, (uint256));
+    }
+
+    function getSellPrice(
+        Options options,
+        OptionsModel.Option memory option,
+        uint256 amountToSell,
+        address payoutTokenAddress
+    ) external view returns (uint256) {
+        (bool success, bytes memory result) = address(options).staticcall(
+            abi.encodeWithSignature(
+                "getSellPrice(OptionsModel.Option,uint256,address)",
+                option,
+                amountToSell,
+                payoutTokenAddress
+            )
+        );
+        require(
+            success,
+            "OptionsProtocolAdapter: getSellPrice staticcall failed"
+        );
+        return abi.decode(result, (uint256));
     }
 }
 
