@@ -13,10 +13,12 @@ interface IDiscreteOptionsProtocol is IOptionsProtocol {
     ///@notice Query and return available PUT options
     function getPutOptions(address baseAsset)
         external
+        view
         returns (OptionsModel.Option[] memory);
 
     ///@notice Query and return available CALL options
     function getCallOptions(address baseAsset)
         external
+        view
         returns (OptionsModel.Option[] memory);
 }
