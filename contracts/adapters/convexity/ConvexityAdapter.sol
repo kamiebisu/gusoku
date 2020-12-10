@@ -171,11 +171,13 @@ contract ConvexityAdapter is
     {
         IoToken optionToken = IoToken(option.tokenAddress);
         return
-            optionToken.balanceOf(
+            optionToken
+                .balanceOf(
                 _uniswapV1Factory.getExchange(option.tokenAddress)
                 // subtract 1 since trying to get/use all the liquidity
                 // would raise a 'invalid jump destination' error
-            ) - 1;
+            )
+                .sub(1);
     }
 
     function getAvailableBuyLiquidity(OptionsModel.Option memory option)
