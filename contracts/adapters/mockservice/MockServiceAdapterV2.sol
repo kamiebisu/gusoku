@@ -138,7 +138,7 @@ contract MockServiceAdapterV2 is
 
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minPriceToSellAt,
+        uint256 minOptionPrice,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         return 1;
@@ -155,7 +155,7 @@ contract MockServiceAdapterV2 is
 
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minPriceToSellAt,
+        uint256 minOptionPrice,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         return 1;

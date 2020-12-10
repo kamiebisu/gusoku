@@ -191,7 +191,7 @@ contract ConvexityAdapter is
 
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 maxPriceToPay,
+        uint256 maxOptionPrice,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
@@ -204,7 +204,7 @@ contract ConvexityAdapter is
             IUniswapV1Exchange exchange = IUniswapV1Exchange(
                 _uniswapV1Factory.getExchange(option.tokenAddress)
             );
-            return exchange.getEthToTokenInputPrice(maxPriceToPay);
+            return exchange.getEthToTokenInputPrice(maxOptionPrice);
         }
 
         // Payment token is some ERC20
@@ -214,7 +214,7 @@ contract ConvexityAdapter is
                 option.tokenAddress,
                 paymentTokenAddress,
                 oTokensToBuy
-            ) <= maxPriceToPay
+            ) <= maxOptionPrice
         ) {
             oTokensToBuy.add(1);
         }
@@ -349,7 +349,7 @@ contract ConvexityAdapter is
 
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minPriceToSellAt,
+        uint256 minOptionPrice,
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
@@ -362,7 +362,7 @@ contract ConvexityAdapter is
             IUniswapV1Exchange exchange = IUniswapV1Exchange(
                 _uniswapV1Factory.getExchange(option.tokenAddress)
             );
-            return exchange.getTokenToEthInputPrice(minPriceToSellAt);
+            return exchange.getTokenToEthInputPrice(minOptionPrice);
         }
 
         // Payout token is some ERC20
@@ -373,7 +373,7 @@ contract ConvexityAdapter is
                 option.tokenAddress,
                 payoutTokenAddress,
                 oTokensToSell
-            ) >= minPriceToSellAt
+            ) >= minOptionPrice
         ) {
             oTokensToSell.sub(1);
         }
