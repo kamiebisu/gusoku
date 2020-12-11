@@ -12,7 +12,7 @@ import "../adapters/domain/OptionsModel.sol";
 interface IResellableOptionsProtocol is IOptionsProtocol {
     ///@notice Sell a given PUT or CALL option
     function sellOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToSell,
         address payoutTokenAddress
     ) external;

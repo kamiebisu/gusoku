@@ -4,10 +4,10 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./adapters/domain/OptionsModel.sol";
-import "./OptionsProtocolAdapterV2.sol";
+import "./OptionsProtocolAdapter.sol";
 
 contract ProtocolAdapterProxy {
-    using OptionsProtocolAdapterV2 for Options;
+    using OptionsProtocolAdapter for Options;
 
     enum ProtocolNames {MockService}
 
