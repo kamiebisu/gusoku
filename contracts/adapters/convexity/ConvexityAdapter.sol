@@ -15,6 +15,7 @@ import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "./interfaces/IUniswapV1Factory.sol";
 import "./interfaces/IUniswapV1Exchange.sol";
+import "./interfaces/IOracle.sol";
 import "../../libraries/strings.sol";
 import "../domain/OptionsStore.sol";
 import "../domain/OptionsModel.sol";
@@ -32,9 +33,10 @@ contract ConvexityAdapter is
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
     IUniswapV1Factory private immutable _uniswapV1Factory;
+    IOracle private immutable _compoundOracle;
 
     // Tokens that can be used as paymentToken and payoutToken throughout Opyn V1
-    // Trying to call functions with tokens not in this set would revert with:
+    // Trying to call functions with tokens not in this set could revert with:
     // "execution reverted: No payout exchange"
     EnumerableSet.AddressSet private _supportedExchangeTokens;
 
@@ -48,6 +50,7 @@ contract ConvexityAdapter is
         _uniswapV1Factory = IUniswapV1Factory(
             0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95
         );
+        _compoundOracle = IOracle(0x7054e08461e3eCb7718B63540adDB3c3A1746415);
 
         for (uint8 i = 0; i < supportedTokens.length; i++) {
             _supportedExchangeTokens.add(supportedTokens[i]);
@@ -146,6 +149,17 @@ contract ConvexityAdapter is
         return filteredOptions;
     }
 
+    ///@notice Checks if a given token is valid to be used as paymentToken and payoutToken
+    function _checkTokenValidity(address token)
+        internal
+        view
+        returns (bool isValid)
+    {
+        isValid =
+            _supportedExchangeTokens.contains(paymentTokenAddress) ||
+            _compoundOracle.getPrice(token) != 0;
+    }
+
     function getPutOptions(address baseAsset)
         external
         view
@@ -195,7 +209,7 @@ contract ConvexityAdapter is
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.getAvailableBuyLiquidityAtPrice: paymentTokenAddress is not supported"
         );
 
@@ -227,7 +241,7 @@ contract ConvexityAdapter is
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.getBuyPrice: paymentTokenAddress is not supported"
         );
 
@@ -245,7 +259,7 @@ contract ConvexityAdapter is
         address paymentTokenAddress
     ) external payable override {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.buyOptions: paymentTokenAddress is not supported"
         );
 
@@ -320,7 +334,7 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external override {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.sellOptions: payoutTokenAddress is not supported"
         );
 
@@ -353,7 +367,7 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.getAvailableSellLiquidityAtPrice: payoutTokenAddress is not supported"
         );
 
@@ -386,7 +400,7 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.getSellPrice: payoutTokenAddress is not supported"
         );
 
