@@ -40,6 +40,8 @@ contract ConvexityAdapter is
     // "execution reverted: No payout exchange"
     EnumerableSet.AddressSet private _supportedExchangeTokens;
 
+    address private constant _WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
     constructor(address[] memory supportedTokens) {
         _optionsFactory = IOptionsFactory(
             0xcC5d905b9c2c8C9329Eb4e25dc086369D6C7777C
@@ -156,7 +158,7 @@ contract ConvexityAdapter is
         returns (bool isValid)
     {
         isValid =
-            _supportedExchangeTokens.contains(paymentTokenAddress) ||
+            _supportedExchangeTokens.contains(token) ||
             _compoundOracle.getPrice(token) != 0;
     }
 
@@ -203,6 +205,34 @@ contract ConvexityAdapter is
         return _getAvailableLiquidity(option);
     }
 
+    function _getAvailableLiquidityAtPrice(
+        OptionsModel.Option memory option,
+        uint256 optionPrice,
+        address tokenAddress
+    ) internal view returns (uint256 availableLiquidity) {
+        // Make sure price is in ETH
+        if (tokenAddress != address(0) && tokenAddress != _WETH) {
+            optionPrice = optionPrice.mul(
+                _compoundOracle.getPrice(tokenAddress)
+            );
+        }
+
+        // Get the reserve of ETH in the Uniswap V1 ETH <-> oToken pair
+        address exchange = _uniswapV1Factory.getExchange(option.tokenAddress);
+        uint256 reserveETH = exchange.balance;
+
+        // Get the reserve of options (oToken)
+        IoToken oToken = IoToken(option.tokenAddress);
+        uint256 reserveOptions = oToken.balanceOf(exchange);
+
+        // An explanation for how the following formula was derived can be found at:
+        // https://ipfs.io/ipfs/bafybeid4u5dib37kbikwa77u6v2u3fzfhiu3r4zg4hxqjzhmnekpk3bspq
+        availableLiquidity = (
+            uint256(1000).mul(reserveOptions).mul(optionPrice)
+        )
+            .div((uint256(997).mul(reserveETH.sub(optionPrice))));
+    }
+
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
         uint256 maxOptionPrice,
@@ -213,26 +243,12 @@ contract ConvexityAdapter is
             "ConvexityAdapter.getAvailableBuyLiquidityAtPrice: paymentTokenAddress is not supported"
         );
 
-        // Payment token is ETH
-        if (paymentTokenAddress == address(0)) {
-            IUniswapV1Exchange exchange = IUniswapV1Exchange(
-                _uniswapV1Factory.getExchange(option.tokenAddress)
+        return
+            _getAvailableLiquidityAtPrice(
+                option,
+                maxOptionPrice,
+                paymentTokenAddress
             );
-            return exchange.getEthToTokenInputPrice(maxOptionPrice);
-        }
-
-        // Payment token is some ERC20
-        uint256 oTokensToBuy = 1;
-        while (
-            _optionsExchange.premiumToPay(
-                option.tokenAddress,
-                paymentTokenAddress,
-                oTokensToBuy
-            ) <= maxOptionPrice
-        ) {
-            oTokensToBuy.add(1);
-        }
-        return oTokensToBuy;
     }
 
     function getBuyPrice(
@@ -371,27 +387,12 @@ contract ConvexityAdapter is
             "ConvexityAdapter.getAvailableSellLiquidityAtPrice: payoutTokenAddress is not supported"
         );
 
-        // Payout token is ETH
-        if (payoutTokenAddress == address(0)) {
-            IUniswapV1Exchange exchange = IUniswapV1Exchange(
-                _uniswapV1Factory.getExchange(option.tokenAddress)
+        return
+            _getAvailableLiquidityAtPrice(
+                option,
+                minOptionPrice,
+                payoutTokenAddress
             );
-            return exchange.getTokenToEthInputPrice(minOptionPrice);
-        }
-
-        // Payout token is some ERC20
-        IoToken oToken = IoToken(option.tokenAddress);
-        uint256 oTokensToSell = oToken.balanceOf(address(this));
-        while (
-            _optionsExchange.premiumReceived(
-                option.tokenAddress,
-                payoutTokenAddress,
-                oTokensToSell
-            ) >= minOptionPrice
-        ) {
-            oTokensToSell.sub(1);
-        }
-        return oTokensToSell;
     }
 
     function getSellPrice(
