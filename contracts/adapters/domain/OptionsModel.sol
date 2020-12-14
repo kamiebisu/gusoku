@@ -30,6 +30,6 @@ library OptionsModel {
     struct OwnedOption {
         Option option;
         uint256 optionsOwned;
-        uint256 protocolOptionID; //only relevant for HEGIC, -1 if irrelevant
+        uint256 protocolOptionID; //only relevant for HEGIC, 0 if irrelevant
     }
 }
