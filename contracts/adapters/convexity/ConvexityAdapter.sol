@@ -15,6 +15,7 @@ import "./interfaces/IOptionsExchange.sol";
 import "./interfaces/IoToken.sol";
 import "./interfaces/IUniswapV1Factory.sol";
 import "./interfaces/IUniswapV1Exchange.sol";
+import "./interfaces/IOracle.sol";
 import "../../libraries/strings.sol";
 import "../domain/OptionsStore.sol";
 import "../domain/OptionsModel.sol";
@@ -32,11 +33,14 @@ contract ConvexityAdapter is
     IOptionsFactory private immutable _optionsFactory;
     IOptionsExchange private immutable _optionsExchange;
     IUniswapV1Factory private immutable _uniswapV1Factory;
+    IOracle private immutable _compoundOracle;
 
     // Tokens that can be used as paymentToken and payoutToken throughout Opyn V1
-    // Trying to call functions with tokens not in this set would revert with:
+    // Trying to call functions with tokens not in this set could revert with:
     // "execution reverted: No payout exchange"
     EnumerableSet.AddressSet private _supportedExchangeTokens;
+
+    address private constant _WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     constructor(address[] memory supportedTokens) {
         _optionsFactory = IOptionsFactory(
@@ -48,6 +52,7 @@ contract ConvexityAdapter is
         _uniswapV1Factory = IUniswapV1Factory(
             0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95
         );
+        _compoundOracle = IOracle(0x7054e08461e3eCb7718B63540adDB3c3A1746415);
 
         for (uint8 i = 0; i < supportedTokens.length; i++) {
             _supportedExchangeTokens.add(supportedTokens[i]);
@@ -146,6 +151,17 @@ contract ConvexityAdapter is
         return filteredOptions;
     }
 
+    ///@notice Checks if a given token is valid to be used as paymentToken and payoutToken
+    function _checkTokenValidity(address token)
+        internal
+        view
+        returns (bool isValid)
+    {
+        isValid =
+            _supportedExchangeTokens.contains(token) ||
+            _compoundOracle.getPrice(token) != 0;
+    }
+
     function getPutOptions(address baseAsset)
         external
         view
@@ -189,36 +205,50 @@ contract ConvexityAdapter is
         return _getAvailableLiquidity(option);
     }
 
+    function _getAvailableLiquidityAtPrice(
+        OptionsModel.Option memory option,
+        uint256 optionPrice,
+        address tokenAddress
+    ) internal view returns (uint256 availableLiquidity) {
+        // Make sure price is in ETH
+        if (tokenAddress != address(0) && tokenAddress != _WETH) {
+            optionPrice = optionPrice.mul(
+                _compoundOracle.getPrice(tokenAddress)
+            );
+        }
+
+        // Get the reserve of ETH in the Uniswap V1 ETH <-> oToken pair
+        address exchange = _uniswapV1Factory.getExchange(option.tokenAddress);
+        uint256 reserveETH = exchange.balance;
+
+        // Get the reserve of options (oToken)
+        IoToken oToken = IoToken(option.tokenAddress);
+        uint256 reserveOptions = oToken.balanceOf(exchange);
+
+        // An explanation for how the following formula was derived can be found at:
+        // https://ipfs.io/ipfs/bafybeid4u5dib37kbikwa77u6v2u3fzfhiu3r4zg4hxqjzhmnekpk3bspq
+        availableLiquidity = (
+            uint256(1000).mul(reserveOptions).mul(optionPrice)
+        )
+            .div((uint256(997).mul(reserveETH.sub(optionPrice))));
+    }
+
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 maxPriceToPay,
+        uint256 maxPricePerOption,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.getAvailableBuyLiquidityAtPrice: paymentTokenAddress is not supported"
         );
 
-        // Payment token is ETH
-        if (paymentTokenAddress == address(0)) {
-            IUniswapV1Exchange exchange = IUniswapV1Exchange(
-                _uniswapV1Factory.getExchange(option.tokenAddress)
+        return
+            _getAvailableLiquidityAtPrice(
+                option,
+                maxPricePerOption,
+                paymentTokenAddress
             );
-            return exchange.getEthToTokenInputPrice(maxPriceToPay);
-        }
-
-        // Payment token is some ERC20
-        uint256 oTokensToBuy = 1;
-        while (
-            _optionsExchange.premiumToPay(
-                option.tokenAddress,
-                paymentTokenAddress,
-                oTokensToBuy
-            ) <= maxPriceToPay
-        ) {
-            oTokensToBuy.add(1);
-        }
-        return oTokensToBuy;
     }
 
     function getBuyPrice(
@@ -227,7 +257,7 @@ contract ConvexityAdapter is
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.getBuyPrice: paymentTokenAddress is not supported"
         );
 
@@ -245,7 +275,7 @@ contract ConvexityAdapter is
         address paymentTokenAddress
     ) external payable override {
         require(
-            _supportedExchangeTokens.contains(paymentTokenAddress),
+            _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.buyOptions: paymentTokenAddress is not supported"
         );
 
@@ -320,7 +350,7 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external override {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.sellOptions: payoutTokenAddress is not supported"
         );
 
@@ -349,35 +379,20 @@ contract ConvexityAdapter is
 
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minPriceToSellAt,
+        uint256 minPricePerOption,
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.getAvailableSellLiquidityAtPrice: payoutTokenAddress is not supported"
         );
 
-        // Payout token is ETH
-        if (payoutTokenAddress == address(0)) {
-            IUniswapV1Exchange exchange = IUniswapV1Exchange(
-                _uniswapV1Factory.getExchange(option.tokenAddress)
+        return
+            _getAvailableLiquidityAtPrice(
+                option,
+                minPricePerOption,
+                payoutTokenAddress
             );
-            return exchange.getTokenToEthInputPrice(minPriceToSellAt);
-        }
-
-        // Payout token is some ERC20
-        IoToken oToken = IoToken(option.tokenAddress);
-        uint256 oTokensToSell = oToken.balanceOf(address(this));
-        while (
-            _optionsExchange.premiumReceived(
-                option.tokenAddress,
-                payoutTokenAddress,
-                oTokensToSell
-            ) >= minPriceToSellAt
-        ) {
-            oTokensToSell.sub(1);
-        }
-        return oTokensToSell;
     }
 
     function getSellPrice(
@@ -386,7 +401,7 @@ contract ConvexityAdapter is
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
-            _supportedExchangeTokens.contains(payoutTokenAddress),
+            _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.getSellPrice: payoutTokenAddress is not supported"
         );
 
