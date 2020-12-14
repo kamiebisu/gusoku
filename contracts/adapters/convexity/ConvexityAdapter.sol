@@ -235,7 +235,7 @@ contract ConvexityAdapter is
 
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 maxOptionPrice,
+        uint256 maxPricePerOption,
         address paymentTokenAddress
     ) external view override returns (uint256) {
         require(
@@ -246,7 +246,7 @@ contract ConvexityAdapter is
         return
             _getAvailableLiquidityAtPrice(
                 option,
-                maxOptionPrice,
+                maxPricePerOption,
                 paymentTokenAddress
             );
     }
@@ -379,7 +379,7 @@ contract ConvexityAdapter is
 
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minOptionPrice,
+        uint256 minPricePerOption,
         address payoutTokenAddress
     ) external view override returns (uint256) {
         require(
@@ -390,7 +390,7 @@ contract ConvexityAdapter is
         return
             _getAvailableLiquidityAtPrice(
                 option,
-                minOptionPrice,
+                minPricePerOption,
                 payoutTokenAddress
             );
     }

@@ -26,7 +26,7 @@ interface IResellableOptionsProtocol is IOptionsProtocol {
     ///@notice Get amount of options available to sell at a certain price or higher
     function getAvailableSellLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 minOptionPrice,
+        uint256 minPricePerOption,
         address payoutTokenAddress
     ) external view returns (uint256);
 

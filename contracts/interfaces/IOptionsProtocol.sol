@@ -18,7 +18,7 @@ interface IOptionsProtocol {
     //@notice Get amount of options available at and below a certain price
     function getAvailableBuyLiquidityAtPrice(
         OptionsModel.Option memory option,
-        uint256 maxOptionPrice,
+        uint256 maxPricePerOption,
         address paymentTokenAddress
     ) external view returns (uint256);
 

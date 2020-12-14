@@ -115,14 +115,14 @@ library OptionsProtocolAdapter {
     function getAvailableBuyLiquidityAtPrice(
         Options options,
         OptionsModel.Option memory option,
-        uint256 maxOptionPrice,
+        uint256 maxPricePerOption,
         address paymentTokenAddress
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
                 "getAvailableBuyLiquidityAtPrice(OptionsModel.Option,uint256,address)",
                 option,
-                maxOptionPrice,
+                maxPricePerOption,
                 paymentTokenAddress
             )
         );
@@ -174,14 +174,14 @@ library OptionsProtocolAdapter {
     function getAvailableSellLiquidityAtPrice(
         Options options,
         OptionsModel.Option memory option,
-        uint256 minOptionPrice,
+        uint256 minPricePerOption,
         address payoutTokenAddress
     ) external view returns (uint256) {
         (bool success, bytes memory result) = address(options).staticcall(
             abi.encodeWithSignature(
                 "getAvailableSellLiquidityAtPrice(OptionsModel.Option,uint256,address)",
                 option,
-                minOptionPrice,
+                minPricePerOption,
                 payoutTokenAddress
             )
         );
