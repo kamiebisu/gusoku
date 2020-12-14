@@ -5,14 +5,12 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IHegicOptions.sol";
-import "../../libraries/strings.sol";
 import "./../domain/OptionsModel.sol";
 import "../../interfaces/IOptionsProtocol.sol";
 import "./interfaces/IHegicPool.sol";
 
 contract HegicAdapter is IOptionsProtocol {
     using SafeMath for uint256;
-    using strings for *;
 
     struct HegicPoolInfo {
         address poolAddress;
