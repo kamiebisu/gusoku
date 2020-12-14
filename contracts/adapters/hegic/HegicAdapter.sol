@@ -132,11 +132,11 @@ contract HegicAdapter is IOptionsProtocol {
         returns (HegicPoolInfo memory)
     {
         //ETH option
-        if (baseAsset == 0x0000000000000000000000000000000000000000) {
+        if (baseAsset == address(0)) {
             return
                 HegicPoolInfo(
                     0xEfC0eEAdC1132A12c9487d800112693bf49EcfA2,
-                    0x0000000000000000000000000000000000000000
+                    address(0)
                 );
         }
 
