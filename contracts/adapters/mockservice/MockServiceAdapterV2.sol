@@ -89,7 +89,7 @@ contract MockServiceAdapterV2 is
         OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
-    ) external payable override {
+    ) external payable override returns (OptionsModel.OwnedOption memory) {
         buyOptionCalls.push(
             MockServiceParams.BuyOptionParams(
                 option,
@@ -97,16 +97,34 @@ contract MockServiceAdapterV2 is
                 paymentTokenAddress
             )
         );
+
+        OptionsModel.Option memory mockOption = OptionsModel.Option(
+            OptionsModel.OptionMarket.MOCKSERVICE,
+            OptionsModel.OptionType.CALL,
+            3,
+            4,
+            address(0),
+            address(0),
+            address(0)
+        );
+
+        OptionsModel.OwnedOption memory ownedOption = OptionsModel.OwnedOption(
+            mockOption,
+            1,
+            1
+        );
+
+        return ownedOption;
     }
 
     function sellOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToSell,
         address payoutTokenAddress
     ) external override {
         sellOptionCalls.push(
             MockServiceParams.SellOptionParams(
-                option,
+                ownedOption,
                 amountToSell,
                 payoutTokenAddress
             )
@@ -114,13 +132,13 @@ contract MockServiceAdapterV2 is
     }
 
     function exerciseOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable override {
         exerciseOptionCalls.push(
             MockServiceParams.ExerciseOptionParams(
-                option,
+                ownedOption,
                 amountToExercise,
                 vaultOwners
             )

@@ -35,11 +35,11 @@ interface IOptionsProtocol {
         OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
-    ) external payable;
+    ) external payable returns (OptionsModel.OwnedOption memory);
 
     ///@notice Exercise a given PUT or CALL option
     function exerciseOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable;

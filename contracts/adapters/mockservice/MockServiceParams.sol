@@ -26,13 +26,13 @@ library MockServiceParams {
     }
 
     struct SellOptionParams {
-        OptionsModel.Option option;
+        OptionsModel.OwnedOption option;
         uint256 amountToSell;
         address payoutTokenAddress;
     }
 
     struct ExerciseOptionParams {
-        OptionsModel.Option option;
+        OptionsModel.OwnedOption option;
         uint256 amountToExercise;
         address[] vaultOwners;
     }
