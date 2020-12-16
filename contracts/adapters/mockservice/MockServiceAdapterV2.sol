@@ -31,9 +31,9 @@ contract MockServiceAdapterV2 is
         override
         returns (OptionsModel.Option[] memory)
     {
-        getPutOptionsCalls.push(
-            MockServiceParams.GetPutOptionsParams(baseAsset)
-        );
+        // getPutOptionsCalls.push(
+        //     MockServiceParams.GetPutOptionsParams(baseAsset)
+        // );
         OptionsModel.Option[] memory putOptions = new OptionsModel.Option[](1);
         putOptions[0] = OptionsModel.Option(
             OptionsModel.OptionMarket.MOCKSERVICE,
@@ -53,9 +53,9 @@ contract MockServiceAdapterV2 is
         override
         returns (OptionsModel.Option[] memory)
     {
-        getCallOptionsCalls.push(
-            MockServiceParams.GetCallOptionsParams(baseAsset)
-        );
+        // getCallOptionsCalls.push(
+        //     MockServiceParams.GetCallOptionsParams(baseAsset)
+        // );
         OptionsModel.Option[] memory callOptions = new OptionsModel.Option[](1);
         callOptions[0] = OptionsModel.Option(
             OptionsModel.OptionMarket.MOCKSERVICE,

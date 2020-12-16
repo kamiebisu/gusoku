@@ -44,7 +44,7 @@ interface IUniswapV1Exchange {
         uint256 min_eth,
         uint256 min_tokens,
         uint256 deadline
-    ) external returns (uint256 out, uint256 out);
+    ) external returns (uint256 out1, uint256 out2);
 
     function __default__() external payable;
 

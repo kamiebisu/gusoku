@@ -21,28 +21,18 @@ contract ProtocolAdapterProxy {
 
     receive() external payable {}
 
-    function getPutOptions(Options optionsProtocol)
+    function getPutOptions(Options optionsProtocol, address baseAsset)
         public
         returns (OptionsModel.Option[] memory)
     {
-        return optionsProtocol.getPutOptions();
+        return optionsProtocol.getPutOptions(baseAsset);
     }
 
-    function getCallOptions(Options optionsProtocol)
+    function getCallOptions(Options optionsProtocol, address baseAsset)
         public
         returns (OptionsModel.Option[] memory)
     {
-        return optionsProtocol.getCallOptions();
-    }
-
-    function getOptionPrice(
-        Options optionsProtocol,
-        OptionsModel.Option memory option,
-        uint256 amountToBuy,
-        address paymentTokenAddress
-    ) public view returns (uint256) {
-        return
-            optionsProtocol.getPrice(option, amountToBuy, paymentTokenAddress);
+        return optionsProtocol.getCallOptions(baseAsset);
     }
 
     function buyOptions(

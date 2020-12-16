@@ -273,7 +273,7 @@ contract ConvexityAdapter is
         OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
-    ) external payable override {
+    ) external payable override returns (OptionsModel.OwnedOption memory) {
         require(
             _checkTokenValidity(paymentTokenAddress),
             "ConvexityAdapter.buyOptions: paymentTokenAddress is not supported"
@@ -292,13 +292,17 @@ contract ConvexityAdapter is
             paymentTokenAddress,
             amountToBuy
         );
+
+        return OptionsModel.OwnedOption(option, amountToBuy, 0);
     }
 
     function exerciseOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) external payable override {
+        OptionsModel.Option memory option = ownedOption.option;
+
         IoToken optionToken = IoToken(option.tokenAddress);
 
         address underlyingAddress = optionToken.underlying();
@@ -345,7 +349,7 @@ contract ConvexityAdapter is
     }
 
     function sellOptions(
-        OptionsModel.Option memory option,
+        OptionsModel.OwnedOption memory ownedOption,
         uint256 amountToSell,
         address payoutTokenAddress
     ) external override {
@@ -353,6 +357,8 @@ contract ConvexityAdapter is
             _checkTokenValidity(payoutTokenAddress),
             "ConvexityAdapter.sellOptions: payoutTokenAddress is not supported"
         );
+
+        OptionsModel.Option memory option = ownedOption.option;
 
         IERC20(option.tokenAddress).safeApprove(address(_optionsExchange), 0);
         IERC20(option.tokenAddress).safeApprove(

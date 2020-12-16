@@ -21,45 +21,31 @@ contract OptionsWarchest {
 
     receive() external payable {}
 
-    function getPutOptions(Options optionsProtocol)
+    function getPutOptions(Options optionsProtocol, address baseAsset)
         public
         view
         returns (OptionsModel.Option[] memory)
     {
-        return optionsProtocol.getPutOptions();
+        return optionsProtocol.getPutOptions(baseAsset);
     }
 
-    function getCallOptions(Options optionsProtocol)
+    function getCallOptions(Options optionsProtocol, address baseAsset)
         public
         view
         returns (OptionsModel.Option[] memory)
     {
-        return optionsProtocol.getCallOptions();
-    }
-
-    function getOptionPrice(
-        Options optionsProtocol,
-        uint256 optionID,
-        uint256 amountToBuy,
-        address paymentTokenAddress
-    ) public view returns (uint256) {
-        return
-            optionsProtocol.getPrice(
-                optionID,
-                amountToBuy,
-                paymentTokenAddress
-            );
+        return optionsProtocol.getCallOptions(baseAsset);
     }
 
     function buyOptions(
         Options optionsProtocol,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToBuy,
         address paymentTokenAddress
     ) public payable {
         // Ensure that the OptionsWarchest have sufficient paymentTokens before buying the options
-        uint256 premiumToPay = optionsProtocol.getPrice(
-            optionID,
+        uint256 premiumToPay = optionsProtocol.getBuyPrice(
+            option,
             amountToBuy,
             paymentTokenAddress
         );
@@ -76,16 +62,16 @@ contract OptionsWarchest {
             );
         }
 
-        optionsProtocol.buyOptions(optionID, amountToBuy, paymentTokenAddress);
+        optionsProtocol.buyOptions(option, amountToBuy, paymentTokenAddress);
     }
 
     function sellOptions(
         Options optionsProtocol,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToSell,
         address payoutTokenAddress
     ) public {
-        address optionAddress = optionsProtocol.options(optionID).tokenAddress;
+        address optionAddress = option.tokenAddress;
         // Ensure that the OptionsWarchest holds enough options to sell
         IERC20 optionToken = IERC20(optionAddress);
         require(
@@ -93,19 +79,15 @@ contract OptionsWarchest {
             "OptionsWarchest: there's not enough options to sell"
         );
 
-        optionsProtocol.sellOptions(optionID, amountToSell, payoutTokenAddress);
+        optionsProtocol.sellOptions(option, amountToSell, payoutTokenAddress);
     }
 
     function exerciseOptions(
         Options optionsProtocol,
-        uint256 optionID,
+        OptionsModel.Option memory option,
         uint256 amountToExercise,
         address[] memory vaultOwners
     ) public payable {
-        optionsProtocol.exerciseOptions(
-            optionID,
-            amountToExercise,
-            vaultOwners
-        );
+        optionsProtocol.exerciseOptions(option, amountToExercise, vaultOwners);
     }
 }
